@@ -25,13 +25,15 @@
  *
  * ============================================================
  */
-package application;
+package controllerFiles;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
+
+import application.Poi;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
@@ -539,7 +541,7 @@ public class FXMLDocumentController implements Initializable {
         // directamente al constructor para que el modelo sea coherente desde el inicio.
         poiDialog.setResultConverter(dialogButton -> {
             if (dialogButton == okButton) {
-                return new Poi(nameField.getText().trim(), x, y);
+            return new Poi(nameField.getText().trim(), x, y);
             }
             return null;
         });

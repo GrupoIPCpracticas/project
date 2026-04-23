@@ -58,14 +58,14 @@ public class Poi {
     }
     
     
-    Poi(String cod, double x, double y){
+    public Poi(String cod, double x, double y){
         code=cod;
  
         position= new Point2D(x,y);
         
     }
 
-    Poi() {
+    protected Poi() {
          
     }
 

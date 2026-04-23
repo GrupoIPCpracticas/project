@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="15" alignment="CENTER" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="RegistrationController">
+    <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+
+    <Label text="User Registration" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+
+    <GridPane hgap="10" vgap="10">
+        <Label text="Nickname:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+        <TextField fx:id="nickField" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+        <Label text="Email:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+        <TextField fx:id="emailField" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+        <Label text="Password:" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+        <PasswordField fx:id="passField" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+
+        <Label text="Date of Birth:" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+        <DatePicker fx:id="dobPicker" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+    </GridPane>
+
+    <Label fx:id="errorLabel" style="-fx-text-fill: red;" wrapText="true"/>
+
+    <Button text="Register" onAction="#handleRegister" style="-fx-padding: 10 20;"/>
+</VBox>

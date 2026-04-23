@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package mapademo;
+package application;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -20,8 +20,7 @@ public class MapaDemoApp extends Application {
     
     @Override
     public void start(Stage stage) throws Exception {
-        Parent root = FXMLLoader.load(getClass().getResource("FXMLDocument.fxml"));
-        stage.getIcons().add(new Image(getClass().getResourceAsStream("/resources/logo.png")));
+        Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/FXMLDocument.fxml"));
         Scene scene = new Scene(root);
         stage.setTitle("Demo mapas - IPC");
         stage.setScene(scene);

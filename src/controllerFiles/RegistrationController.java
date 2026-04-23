@@ -1,3 +1,5 @@
+package controllerFiles;
+
 import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -45,7 +47,6 @@ public class RegistrationController implements Initializable {
         } else {
             errorLabel.setStyle("-fx-text-fill: green;");
             errorLabel.setText("Registration successful for " + nick + "!");
-            regi
         }
     }
 }
