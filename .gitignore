@@ -1,5 +1,7 @@
 # Dependencies
 lib/
+IPCprojectlib/
+nbproject/
 
 # IDE and Editor
 .idea/

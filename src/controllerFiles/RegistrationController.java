@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.ResourceBundle;
 
 import upv.ipc.sportlib.User;
+import upv.ipc.sportlib.SportActivityApp;
 
 public class RegistrationController implements Initializable {
     @FXML private TextField nickField;
@@ -31,7 +32,6 @@ public class RegistrationController implements Initializable {
         String pass = passField.getText();
         LocalDate dob = dobPicker.getValue();
 
-        // Validation Chain
         if (!User.checkNickName(nick)) {
             errorLabel.setText("Nickname must be 6-15 characters (letters, digits, - or _).");
         } else if (!isNicknameUnique(nick)) {
@@ -45,7 +45,7 @@ public class RegistrationController implements Initializable {
         } else {
             errorLabel.setStyle("-fx-text-fill: green;");
             errorLabel.setText("Registration successful for " + nick + "!");
-            // app.registerUser(nick, email, pass, dob, null);
+            regi
         }
     }
 }
