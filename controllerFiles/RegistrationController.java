@@ -1,19 +1,29 @@
+import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.scene.control.*;
-import java.time.LocalDate;
 
-public class RegistrationController {
+import java.net.URL;
+import java.time.LocalDate;
+import java.util.ResourceBundle;
+
+import upv.ipc.sportlib.User;
+
+public class RegistrationController implements Initializable {
     @FXML private TextField nickField;
     @FXML private TextField emailField;
     @FXML private PasswordField passField;
     @FXML private DatePicker dobPicker;
     @FXML private Label errorLabel;
 
-    // Simulated database check
+    @Override
+    public void initialize(URL url, ResourceBundle rb) {
+        // TODO
+    }
+
     private boolean isNicknameUnique(String nick) {
         return !"jgarcia".equalsIgnoreCase(nick);
     }
-
     @FXML
     private void handleRegister() {
         String nick = nickField.getText();
@@ -33,10 +43,8 @@ public class RegistrationController {
         } else if (!User.isOlderThan(dob, 12)) {
             errorLabel.setText("You must be at least 12 years old.");
         } else {
-            // Success
             errorLabel.setStyle("-fx-text-fill: green;");
             errorLabel.setText("Registration successful for " + nick + "!");
-            System.out.println("Registering user in app...");
             // app.registerUser(nick, email, pass, dob, null);
         }
     }
