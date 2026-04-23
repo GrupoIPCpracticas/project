@@ -2,6 +2,7 @@
 lib/
 IPCprojectlib/
 nbproject/
+out/
 
 # IDE and Editor
 .idea/
