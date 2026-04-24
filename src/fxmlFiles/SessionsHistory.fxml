@@ -17,10 +17,10 @@
 
         <TableView fx:id="sessionTable" VBox.vgrow="ALWAYS">
             <columns>
-                <TableColumn fx:id="colDuration" prefWidth="100.0" text="Duración" />
-                <TableColumn fx:id="colImported" prefWidth="100.0" text="Importadas" />
-                <TableColumn fx:id="colViewed" prefWidth="100.0" text="Visualizadas" />
-                <TableColumn fx:id="colAnnotations" prefWidth="100.0" text="Anotaciones" />
+                <TableColumn fx:id="colDuration" prefWidth="100.0" text="Duration" />
+                <TableColumn fx:id="colImported" prefWidth="100.0" text="Imported" />
+                <TableColumn fx:id="colViewed" prefWidth="100.0" text="Visualized" />
+                <TableColumn fx:id="colAnnotations" prefWidth="100.0" text="Anotations" />
             </columns>
             <columnResizePolicy>
                 <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
@@ -30,15 +30,15 @@
         <HBox spacing="30.0" style="-fx-background-color: #eeeeee; -fx-padding: 15; -fx-background-radius: 5;">
             <children>
                 <VBox alignment="CENTER">
-                    <Label style="-fx-font-weight: bold;" text="Total Importadas" />
+                    <Label style="-fx-font-weight: bold;" text="Total Imported" />
                     <Label fx:id="totalImportedLabel" text="0" />
                 </VBox>
                 <VBox alignment="CENTER">
-                    <Label style="-fx-font-weight: bold;" text="Total Visualizadas" />
+                    <Label style="-fx-font-weight: bold;" text="Total Visualized" />
                     <Label fx:id="totalViewedLabel" text="0" />
                 </VBox>
                 <VBox alignment="CENTER">
-                    <Label style="-fx-font-weight: bold;" text="Total Anotaciones" />
+                    <Label style="-fx-font-weight: bold;" text="Total Anotations" />
                     <Label fx:id="totalAnnotationsLabel" text="0" />
                 </VBox>
             </children>

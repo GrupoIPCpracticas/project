@@ -20,20 +20,7 @@ import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
-import javafx.scene.control.MenuButton;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.Slider;
-import javafx.scene.control.SplitPane;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
@@ -55,27 +42,19 @@ public class MapController implements Initializable {
     private Group zoomGroup;
 
     @FXML private Pane mapPane;
+    @FXML private ListView<Poi> map_listview;
+    @FXML private ScrollPane map_scrollpane;
+    @FXML private Slider zoom_slider;
+    @FXML private Label mousePosition;
+    @FXML private Button statsButton;
+
 
     private ContextMenu mapContextMenu;
-
     private boolean insertionMode = false;
-
-    @FXML private ListView<Poi> map_listview;
-
-    @FXML private ScrollPane map_scrollpane;
-
-    @FXML private Slider zoom_slider;
-
-    private MenuButton map_pin;
-
-    @FXML private Label mousePosition;
-    @FXML private SplitPane splitPane;
-
-    @FXML private ImageView mapView;
-
     private SportActivityApp app;
     private MapProjection projection;
     private MapRegion currentRegion;
+    private Activity currentActivity = null;
 
     private void switchSceneMenu(ActionEvent event, Parent root, String title, boolean wait) {
         if (wait) {
@@ -171,8 +150,17 @@ public class MapController implements Initializable {
 
     @FXML
     private void handleStats(ActionEvent event) throws IOException{
-        Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/Statistics.fxml"));
-        switchSceneMenu(event, root, "Statistics", true);
+        if (this.currentActivity == null) {
+            showError("No activity loaded. Please import a GPX file first.");
+            return;
+        }
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxmlFiles/Statistics.fxml"));
+        Parent root = loader.load();
+
+        StatisticsController controller = loader.getController();
+        controller.setActivityData(currentActivity);
+        switchSceneMenu(event, root, "Activity Statistics", true);
+
     }
 
     // =========================================================
@@ -262,7 +250,7 @@ public class MapController implements Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-
+        statsButton.setDisable(true);
         zoom_slider.setMin(0.5);   // zoom mínimo: 50 %
         zoom_slider.setMax(1.5);   // zoom máximo: 150 %
         zoom_slider.setValue(1.0); // valor inicial: 100 %
@@ -316,18 +304,6 @@ public class MapController implements Initializable {
     /**
      * @param event evento de acción del menú
      */
-    @FXML
-    private void about(ActionEvent event) {
-        Alert mensaje = new Alert(Alert.AlertType.INFORMATION);
-        Stage dialogStage = (Stage) mensaje.getDialogPane().getScene().getWindow();
-        dialogStage.getIcons().add(
-            new Image(getClass().getResourceAsStream("../resources/logo.png"))
-        );
-
-        mensaje.setTitle("About");
-        mensaje.setHeaderText("IPC - 2026");
-        mensaje.showAndWait();
-    }
 
     @FXML
     private void handleLogout(ActionEvent event) throws IOException {
@@ -359,19 +335,14 @@ public class MapController implements Initializable {
 
         if (file != null) {
             try {
-                Activity activity = app.importActivity(file);
-
-                if (activity != null) {
-
-
-                    currentRegion = activity.getSuggestedMap();
+                currentActivity = app.importActivity(file);
+                if (currentActivity != null) {
+                    statsButton.setDisable(false);
+                    currentRegion = currentActivity.getSuggestedMap();
                     File mapImageFile = new File(currentRegion.getImagePath());
-
                     buildMap(mapImageFile);
-
                     this.projection = new MapProjection(currentRegion, mapPane.getWidth(), mapPane.getHeight());
-                    //displayStatistics(activity);
-                    drawRoute(activity);
+                    drawRoute(currentActivity);
                 }
             } catch (Exception e) {
                 showError("Error processing GPX: " + e.getMessage());
@@ -379,28 +350,6 @@ public class MapController implements Initializable {
         }
     }
 
-    /**
-     * Shows the statistics of the imported GPX activity in the UI.
-     * @param activity The activity object returned by the library.
-     */
-    private void displayStatistics(Activity activity) {
-        double kms = activity.getTotalDistance() / 1000.0;
-
-        System.out.println("Displaying stats for: " + activity.getName());
-
-        // Update your labels (ensure these @FXML IDs match your FXML file)
-        // If you don't have these labels yet, you'll need to add them to FXML
-        /*
-        distLabel.setText(String.format("%.2f km", kms));
-        durLabel.setText(formatDuration(activity.getDuration()));
-        speedLabel.setText(String.format("%.2f km/h", activity.getAverageSpeed()));
-        paceLabel.setText(String.format("%.2f min/km", activity.getAveragePace()));
-        posGainLabel.setText(String.format("%.0f m", activity.getElevationGain()));
-        negGainLabel.setText(String.format("%.0f m", activity.getElevationLoss()));
-        minAltLabel.setText(String.format("%.0f m", activity.getMinElevation()));
-        maxAltLabel.setText(String.format("%.0f m", activity.getMaxElevation()));
-        */
-    }
 
     /**
      * Draws the route on the mapPane using Polyline and highlights Start/End points.
@@ -432,10 +381,6 @@ public class MapController implements Initializable {
         mapPane.getChildren().addAll(route, startMarker, endMarker);
     }
 
-    /**
-     * Helper to translate GPS coordinates to Map Pixels.
-     * Note: You must adjust these bounds to match your "upv.jpg" image geographic coverage.
-     */
     private Point2D geoToPixel(double lat, double lon) {
         double topLat = 39.485;
         double bottomLat = 39.475;
@@ -489,7 +434,6 @@ public class MapController implements Initializable {
         TextField nameField = new TextField();
         nameField.setPromptText("Nombre del POI");
 
-        // Layout del contenido del diálogo (VBox con espaciado de 10 px)
         VBox vbox = new VBox(10, new Label("Nombre:"), nameField);
         poiDialog.getDialogPane().setContent(vbox);
 
@@ -500,7 +444,6 @@ public class MapController implements Initializable {
             return null;
         });
 
-        // Mostramos el diálogo y esperamos la respuesta del usuario
         Optional<Poi> result = poiDialog.showAndWait();
 
         if (result.isPresent()) {

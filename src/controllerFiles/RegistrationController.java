@@ -26,13 +26,11 @@ import javafx.event.ActionEvent;
 
 public class RegistrationController implements Initializable {
 
-    // Input Fields
     @FXML private TextField nickField;
     @FXML private TextField emailField;
     @FXML private PasswordField passField;
     @FXML private DatePicker dobPicker;
 
-    // Individual Error Labels
     @FXML private Label nickErrorLabel;
     @FXML private Label emailErrorLabel;
     @FXML private Label passErrorLabel;
@@ -47,7 +45,6 @@ public class RegistrationController implements Initializable {
         nickField.textProperty().addListener((obs, oldV, newV) -> {
             if (newV.isBlank()) nickErrorLabel.setText("");
             else if (!User.checkNickName(newV)) nickErrorLabel.setText("6-15 chars, letters/digits only.");
-            else if (!isNicknameUnique(newV)) nickErrorLabel.setText("Nickname taken.");
             else nickErrorLabel.setText("");
         });
 
@@ -82,7 +79,6 @@ public class RegistrationController implements Initializable {
 
         BooleanBinding isInvalid = Bindings.createBooleanBinding(
                 () -> !User.checkNickName(nickField.getText()) ||
-                        !isNicknameUnique(nickField.getText()) ||
                         !User.checkEmail(emailField.getText()) ||
                         !User.checkPassword(passField.getText()) ||
                         dobPicker.getValue() == null ||
@@ -96,10 +92,6 @@ public class RegistrationController implements Initializable {
         registerButton.disableProperty().bind(isInvalid);
     }
 
-    private boolean isNicknameUnique(String nick) {
-        // In a real scenario, you'd check SportActivityApp.getInstance().existsUser(nick)
-        return !"jgarcia".equalsIgnoreCase(nick);
-    }
 
     @FXML
     private void handleRegister(ActionEvent event) throws IOException{
