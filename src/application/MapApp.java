@@ -24,7 +24,7 @@ public class MapApp extends Application {
         SportActivityApp app = SportActivityApp.getInstance();
         Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/Welcome.fxml"));
         Scene scene = new Scene(root);
-        stage.setTitle("Demo mapas - IPC");
+        stage.setTitle("Welcome");
         stage.setScene(scene);
         stage.show();
     }

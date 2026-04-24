@@ -44,12 +44,10 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import upv.ipc.sportlib.MapRegion;
-import upv.ipc.sportlib.SportActivityApp;
-import upv.ipc.sportlib.Activity;
-import upv.ipc.sportlib.TrackPoint;
+import upv.ipc.sportlib.*;
 import javafx.scene.shape.Polyline;
 
 public class MapController implements Initializable {
@@ -76,6 +74,33 @@ public class MapController implements Initializable {
     @FXML private ImageView mapView;
 
     private SportActivityApp app;
+    private MapProjection projection;
+    private MapRegion currentRegion;
+
+    private void switchSceneMenu(ActionEvent event, Parent root, String title, boolean wait) {
+        if (wait) {
+            Stage stage = new Stage();
+            stage.setTitle(title);
+            stage.setScene(new Scene(root));
+            stage.initModality(Modality.APPLICATION_MODAL);
+            Stage mainStage = (Stage) map_scrollpane.getScene().getWindow();
+            stage.initOwner(mainStage);
+            stage.showAndWait();
+
+        } else {
+            Stage stage = (Stage) map_scrollpane.getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.setTitle(title);
+            stage.show();
+        }
+    }
+
+    private void switchSceneButton(ActionEvent event, Parent root, String title) {
+        Stage stage = (Stage) ((Node)event.getSource()).getScene().getWindow();
+        stage.setScene(new Scene(root));
+        stage.setTitle(title);
+        stage.show();
+    }
 
     /**
      * Aumenta el zoom en 0.1 unidades al pulsar el botón "+".
@@ -86,13 +111,6 @@ public class MapController implements Initializable {
     void zoomIn(ActionEvent event) {
         double sliderVal = zoom_slider.getValue();
         zoom_slider.setValue(sliderVal + 0.1);
-    }
-
-    private void switchScene(ActionEvent event, Parent root, String title) {
-        Stage stage = (Stage) map_scrollpane.getScene().getWindow();
-        stage.setScene(new Scene(root));
-        stage.setTitle(title);
-        stage.show();
     }
 
     /**
@@ -149,6 +167,12 @@ public class MapController implements Initializable {
         final KeyFrame kf  = new KeyFrame(Duration.millis(500), kv1, kv2);
         timeline.getKeyFrames().add(kf);
         timeline.play();
+    }
+
+    @FXML
+    private void handleStats(ActionEvent event) throws IOException{
+        Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/Statistics.fxml"));
+        switchSceneMenu(event, root, "Statistics", true);
     }
 
     // =========================================================
@@ -310,20 +334,20 @@ public class MapController implements Initializable {
         SportActivityApp app = SportActivityApp.getInstance();
         app.logout();
         Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/Welcome.fxml"));
-        switchScene(event, root, "Demo mapas - IPC");
+        switchSceneMenu(event, root, "Demo mapas - IPC", false);
 
     }
 
     @FXML
     private void handleProfile(ActionEvent event) throws IOException{
         Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/EditProfile.fxml"));
-        switchScene(event, root, "Edit Profile");
+        switchSceneMenu(event, root, "Edit Profile", false);
     }
 
     @FXML
     private void handleSessions(ActionEvent event) throws IOException{
         Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/SessionsHistory.fxml"));
-        switchScene(event, root, "Sessions History");
+        switchSceneMenu(event, root, "Sessions History", false);
     }
 
     @FXML
@@ -338,14 +362,16 @@ public class MapController implements Initializable {
                 Activity activity = app.importActivity(file);
 
                 if (activity != null) {
-                    MapRegion region = activity.getSuggestedMap();
 
-                    File mapImageFile = new File(region.getImagePath());
+
+                    currentRegion = activity.getSuggestedMap();
+                    File mapImageFile = new File(currentRegion.getImagePath());
+
                     buildMap(mapImageFile);
 
+                    this.projection = new MapProjection(currentRegion, mapPane.getWidth(), mapPane.getHeight());
                     //displayStatistics(activity);
-                    //drawRoute(activity);
-
+                    drawRoute(activity);
                 }
             } catch (Exception e) {
                 showError("Error processing GPX: " + e.getMessage());
@@ -358,10 +384,6 @@ public class MapController implements Initializable {
      * @param activity The activity object returned by the library.
      */
     private void displayStatistics(Activity activity) {
-        // Example assumes you have these Labels defined in FXML
-        // and using the method names from section 8.3.3
-
-        // Distance: convert meters to km for better readability
         double kms = activity.getTotalDistance() / 1000.0;
 
         System.out.println("Displaying stats for: " + activity.getName());
@@ -384,28 +406,28 @@ public class MapController implements Initializable {
      * Draws the route on the mapPane using Polyline and highlights Start/End points.
      */
     private void drawRoute(Activity activity) {
-
         List<TrackPoint> points = activity.getTrackPoints();
-        if (points.isEmpty()) return;
+        if (points == null || points.isEmpty()) return;
 
         Polyline route = new Polyline();
         route.setStroke(Color.BLUE);
-        route.setStrokeWidth(2);
+        route.setStrokeWidth(3);
+        route.setMouseTransparent(true);
 
-        for (TrackPoint p : points) {
-            Point2D pixel = geoToPixel(p.getLatitude(), p.getLongitude());
-            route.getPoints().addAll(pixel.getX(), pixel.getY());
+        List<Point2D> pixelPoints = projection.projectActivity(activity);
+
+        for (Point2D p : pixelPoints) {
+            route.getPoints().addAll(p.getX(), p.getY());
         }
 
-        // 2. Highlight Start (Green)
         TrackPoint start = activity.getStartPoint();
-        Point2D startPx = geoToPixel(start.getLatitude(), start.getLongitude());
-        Circle startMarker = new Circle(startPx.getX(), startPx.getY(), 5, Color.GREEN);
-
-        // 3. Highlight End (Red)
+        Point2D startPx = projection.project(start);
+        Circle startMarker = new Circle(startPx.getX(), startPx.getY(), 7, Color.GREEN);
+        startMarker.setStroke(Color.WHITE);
         TrackPoint end = activity.getEndPoint();
-        Point2D endPx = geoToPixel(end.getLatitude(), end.getLongitude());
-        Circle endMarker = new Circle(endPx.getX(), endPx.getY(), 5, Color.RED);
+        Point2D endPx = projection.project(end);
+        Circle endMarker = new Circle(endPx.getX(), endPx.getY(), 7, Color.RED);
+        endMarker.setStroke(Color.WHITE);
 
         mapPane.getChildren().addAll(route, startMarker, endMarker);
     }
@@ -415,7 +437,6 @@ public class MapController implements Initializable {
      * Note: You must adjust these bounds to match your "upv.jpg" image geographic coverage.
      */
     private Point2D geoToPixel(double lat, double lon) {
-        // Example bounds for UPV area (you must adjust these to your specific map)
         double topLat = 39.485;
         double bottomLat = 39.475;
         double leftLon = -0.345;
@@ -453,22 +474,18 @@ public class MapController implements Initializable {
      */
     private void addPoi(double x, double y) {
 
-        // ── Construcción del diálogo personalizado ────────────────────
         Dialog<Poi> poiDialog = new Dialog<>();
         poiDialog.setTitle("Nuevo POI");
         poiDialog.setHeaderText("Introduce un nuevo POI");
 
-        // Personalizamos el icono de la ventana del diálogo
         Stage dialogStage = (Stage) poiDialog.getDialogPane().getScene().getWindow();
         dialogStage.getIcons().add(
             new Image(getClass().getResourceAsStream("/resources/logo.png"))
         );
 
-        // Botones del diálogo: Aceptar y Cancelar
         ButtonType okButton = new ButtonType("Aceptar", ButtonBar.ButtonData.OK_DONE);
         poiDialog.getDialogPane().getButtonTypes().addAll(okButton, ButtonType.CANCEL);
 
-        // Campo de texto para el nombre del POI
         TextField nameField = new TextField();
         nameField.setPromptText("Nombre del POI");
 
@@ -476,9 +493,6 @@ public class MapController implements Initializable {
         VBox vbox = new VBox(10, new Label("Nombre:"), nameField);
         poiDialog.getDialogPane().setContent(vbox);
 
-        // ResultConverter: transforma la selección del botón en un objeto Poi.
-        // FIX 1: ya no usamos coordenadas provisionales (0,0); pasamos (x,y)
-        // directamente al constructor para que el modelo sea coherente desde el inicio.
         poiDialog.setResultConverter(dialogButton -> {
             if (dialogButton == okButton) {
             return new Poi(nameField.getText().trim(), x, y);
@@ -491,16 +505,8 @@ public class MapController implements Initializable {
 
         if (result.isPresent()) {
             Poi poi = result.get();
-
-            // FIX 1: confirmamos la posición como Point2D para compatibilidad
-            // con getPosition(), usando las mismas coordenadas (x, y).
             poi.setPosition(new Point2D(x, y));
-
-            // Añadimos el POI al ListView (la CellFactory mostrará nombre y código)
             map_listview.getItems().add(poi);
-
-            // FIX 1: usamos (x, y) tanto para el modelo como para el Text,
-            // garantizando que la etiqueta aparezca exactamente donde se hizo clic.
             Text text = new Text(poi.getCode());
             text.setX(x);
             text.setY(y);
@@ -523,7 +529,6 @@ public class MapController implements Initializable {
 
         File imgFile = fc.showOpenDialog(zoom_slider.getScene().getWindow());
 
-        // FIX 3: showOpenDialog() devuelve null si el usuario cancela la selección
         if (imgFile != null) {
             System.out.println("Mapa seleccionado: " + imgFile.getCanonicalPath());
             buildMap(imgFile); // Reconstruimos la vista con la nueva imagen
@@ -545,7 +550,4 @@ public class MapController implements Initializable {
         circle.setCenterY(y);
         mapPane.getChildren().add(circle); // Se añade sobre el mapa como cualquier nodo
     }
-
-
-
 }
