@@ -15,6 +15,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.Node;
@@ -25,6 +26,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -225,18 +227,81 @@ public class MapController implements Initializable {
      * @param y coordenada Y del clic en el sistema local del mapPane
      */
     private void onMapRightClick(double x, double y) {
-        mapContextMenu.hide();
+        if (currentActivity == null || projection == null) return;
 
-        final double clickX = x;
-        final double clickY = y;
-        mapContextMenu.getItems().get(0).setOnAction(e -> addPoi(clickX, clickY));
-        mapContextMenu.getItems().get(1).setOnAction(e -> addCircle(clickX, clickY));
+        GeoPoint geoPoint = projection.unproject(x, y);
 
-        mapContextMenu.show(
-            mapPane.getScene().getWindow(),
-            mapPane.localToScreen(x, y).getX(),
-            mapPane.localToScreen(x, y).getY()
-        );
+        Dialog<Annotation> dialog = new Dialog<>();
+        dialog.setTitle("Add Annotation");
+        dialog.setHeaderText("Create a new point annotation");
+
+        ButtonType saveButtonType = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
+
+        TextField textDescription = new TextField();
+        textDescription.setPromptText("e.g., Dangerous crossing");
+
+        ColorPicker picker = new ColorPicker(Color.RED);
+
+        grid.add(new Label("Description:"), 0, 0);
+        grid.add(textDescription, 1, 0);
+        grid.add(new Label("Color:"), 0, 1);
+        grid.add(picker, 1, 1);
+
+        dialog.getDialogPane().setContent(grid);
+
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == saveButtonType) {
+                String hexColor = toHex(picker.getValue());
+                return new Annotation(
+                        AnnotationType.POINT,
+                        textDescription.getText(),
+                        hexColor,
+                        2.0,
+                        List.of(geoPoint)
+                );
+            }
+            return null;
+        });
+
+        dialog.showAndWait().ifPresent(ann -> {
+            Annotation saved = app.addAnnotation(currentActivity, ann);
+            if (saved != null) {
+                displayAnnotation(saved);
+            }
+        });
+    }
+
+    private void displayAnnotation(Annotation ann) {
+        GeoPoint gp = ann.getGeoPoints().get(0);
+        Point2D pix = projection.project(gp);
+
+        if (ann.getType() == AnnotationType.POINT) {
+            Circle marker = new Circle(pix.getX(), pix.getY(), 6);
+            marker.setFill(Color.web(ann.getColor()));
+            marker.setStroke(Color.WHITE);
+            marker.setStrokeWidth(ann.getStrokeWidth());
+
+            Label label = new Label(ann.getText());
+            label.setLayoutX(pix.getX() + 10);
+            label.setLayoutY(pix.getY() - 10);
+            label.setStyle("-fx-background-color: rgba(255, 255, 255, 0.7); -fx-padding: 2;");
+
+            mapPane.getChildren().addAll(marker, label);
+        }
+        // Add logic here for LINE (Polyline) or CIRCLE (Circle with radius)
+    }
+
+    private String toHex(Color c) {
+        return String.format("#%02X%02X%02X",
+                (int)(c.getRed() * 255),
+                (int)(c.getGreen() * 255),
+                (int)(c.getBlue() * 255));
     }
 
     // =========================================================
