@@ -20,12 +20,12 @@
         </Label>
         <VBox alignment="CENTER" spacing="10.0">
             <children>
-                <Button fx:id="loginBtn" minWidth="150.0" mnemonicParsing="false" onAction="#handleLoginNav" text="Log In">
+                <Button fx:id="loginBtn" minWidth="150.0" mnemonicParsing="false" style="-fx-padding: 10 30; -fx-font-weight: bold; -fx-base: #2196F3; -fx-text-fill: white;" onAction="#handleLoginNav" text="Log In">
                     <padding>
                         <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                     </padding>
                 </Button>
-                <Button fx:id="registerBtn" minWidth="150.0" mnemonicParsing="false" onAction="#handleRegisterNav" text="Register">
+                <Button fx:id="registerBtn" minWidth="150.0" mnemonicParsing="false" style="-fx-padding: 10 20;" onAction="#handleRegisterNav" text="Register">
                     <padding>
                         <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                     </padding>

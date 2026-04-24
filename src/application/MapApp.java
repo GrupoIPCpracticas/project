@@ -6,6 +6,7 @@
 package application;
 
 import javafx.application.Application;
+import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -27,6 +28,7 @@ public class MapApp extends Application {
         stage.setScene(scene);
         stage.show();
     }
+
 
     /**
      * @param args the command line arguments
