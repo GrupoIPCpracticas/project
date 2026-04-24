@@ -40,7 +40,7 @@ public class RegistrationController implements Initializable {
 
     @FXML private Button registerButton;
     @FXML private ImageView avatarView;
-    private Image currentAvatar;
+    private String avatarPath;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -59,7 +59,7 @@ public class RegistrationController implements Initializable {
 
         passField.textProperty().addListener((obs, oldV, newV) -> {
             if (newV.isBlank()) passErrorLabel.setText("");
-            else if (!User.checkPassword(newV)) passErrorLabel.setText("8-20 chars: Upper, Lower, Digit, Special.");
+            else if (!User.checkPassword(newV)) passErrorLabel.setText("8-20 chars: Upper, Lower, Digit, and Special.");
             else passErrorLabel.setText("");
         });
 
@@ -70,10 +70,11 @@ public class RegistrationController implements Initializable {
         });
 
         try {
-            InputStream is = getClass().getResourceAsStream("/resources/logo.png");
-            if (is != null) {
-                currentAvatar = new Image(is); // Update the variable!
-                avatarView.setImage(currentAvatar);
+
+            URL defaultUrl = getClass().getResource("/resources/logo.png");
+            if (defaultUrl != null) {
+                avatarPath = defaultUrl.toExternalForm();
+                avatarView.setImage(new Image(avatarPath));
             }
         } catch (Exception e) {
             System.out.println("Could not load default avatar. Check path: /resources/logo.png");
@@ -109,7 +110,7 @@ public class RegistrationController implements Initializable {
 
         SportActivityApp app = SportActivityApp.getInstance();
 
-        boolean registered = app.registerUser(nick, email, pass, dob, currentAvatar);
+        boolean registered = app.registerUser(nick, email, pass, dob, avatarPath);
         if(registered) {
             Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/Welcome.fxml"));
             switchScene(event, root, "Welcome - Running la Safor");
@@ -129,10 +130,10 @@ public class RegistrationController implements Initializable {
         fileChooser.getExtensionFilters().addAll(
                 new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.gif")
         );
-        File selectedFile = fileChooser.showOpenDialog(null);
-        if (selectedFile != null) {
-            currentAvatar = new Image(selectedFile.toURI().toString());
-            avatarView.setImage(currentAvatar);
+        File file = fileChooser.showOpenDialog(((Node)event.getSource()).getScene().getWindow());
+        if (file != null) {
+            avatarPath = file.toURI().toString();
+            avatarView.setImage(new Image(avatarPath));
         }
     }
 

@@ -18,7 +18,7 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllerFiles.MapController">
+<BorderPane xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllerFiles.MapController">
    <center>
       <VBox prefHeight="556.0" prefWidth="853.0">
          <children>
@@ -32,7 +32,7 @@
                            </VBox.margin>
                         </Label>
                         <ListView fx:id="map_listview" onMouseClicked="#listClicked" VBox.vgrow="ALWAYS" />
-                        <Button maxWidth="1.7976931348623157E308" style="-fx-padding: 10 30; -fx-font-weight: bold; -fx-base: #2196F3; -fx-text-fill: white;" mnemonicParsing="false" text="Import GPX file" />
+                        <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleImportGPX" style="-fx-padding: 10 30; -fx-font-weight: bold; -fx-base: #2196F3; -fx-text-fill: white;" text="Import GPX file" />
                      </children>
                      <padding>
                         <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
@@ -43,7 +43,9 @@
                         <Pane fx:id="mapPane">
                            <children>
                               <ImageView fx:id="mapView" pickOnBounds="true">
-                              </ImageView>
+                                 <image>
+                                    <Image url="@../resources/upv.jpg" />
+                                 </image></ImageView>
                            </children>
                         </Pane>
                      </content>

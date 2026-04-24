@@ -3,6 +3,7 @@ package controllerFiles;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
@@ -46,7 +47,9 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import upv.ipc.sportlib.SportActivityApp;
-
+import upv.ipc.sportlib.Activity;
+import upv.ipc.sportlib.TrackPoint;
+import javafx.scene.shape.Polyline;
 
 public class MapController implements Initializable {
 
@@ -76,6 +79,8 @@ public class MapController implements Initializable {
     @FXML
     private SplitPane splitPane;
 
+    private SportActivityApp app;
+
     /**
      * Aumenta el zoom en 0.1 unidades al pulsar el botón "+".
      *
@@ -87,14 +92,7 @@ public class MapController implements Initializable {
         zoom_slider.setValue(sliderVal + 0.1);
     }
 
-    private void switchSceneButton(ActionEvent event, Parent root, String title) {
-        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        stage.setScene(new Scene(root));
-        stage.setTitle(title);
-        stage.show();
-    }
-
-    private void switchSceneMenu(ActionEvent event, Parent root, String title) {
+    private void switchScene(ActionEvent event, Parent root, String title) {
         Stage stage = (Stage) map_scrollpane.getScene().getWindow();
         stage.setScene(new Scene(root));
         stage.setTitle(title);
@@ -155,8 +153,7 @@ public class MapController implements Initializable {
         final KeyValue kv2 = new KeyValue(map_scrollpane.vvalueProperty(), scrollV);
         final KeyFrame kf  = new KeyFrame(Duration.millis(500), kv1, kv2);
         timeline.getKeyFrames().add(kf);
-        timeline.play(); // Inicia la animación (no bloquea el hilo de la UI)
-
+        timeline.play();
     }
 
     // =========================================================
@@ -319,27 +316,136 @@ public class MapController implements Initializable {
         mensaje.showAndWait(); // Bloquea hasta que el usuario cierra el diálogo
     }
 
-
-
     @FXML
     private void handleLogout(ActionEvent event) throws IOException {
         SportActivityApp app = SportActivityApp.getInstance();
         app.logout();
         Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/Welcome.fxml"));
-        switchSceneMenu(event, root, "Demo mapas - IPC");
+        switchScene(event, root, "Demo mapas - IPC");
 
     }
 
     @FXML
     private void handleProfile(ActionEvent event) throws IOException{
         Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/EditProfile.fxml"));
-        switchSceneMenu(event, root, "Edit Profile");
+        switchScene(event, root, "Edit Profile");
     }
 
     @FXML
     private void handleSessions(ActionEvent event) throws IOException{
         Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/SessionsHistory.fxml"));
-        switchSceneMenu(event, root, "Sessions History");
+        switchScene(event, root, "Sessions History");
+    }
+
+    @FXML
+    private void handleImportGPX(ActionEvent event) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Select GPX File");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("GPX Files", "*.gpx"));
+        File file = fileChooser.showOpenDialog(((Node)event.getSource()).getScene().getWindow());
+
+        if (file != null) {
+            try {
+                Activity activity = app.importActivity(file);
+
+                if (activity != null) {
+                    displayStatistics(activity);
+                    drawRoute(activity);
+                }
+            } catch (Exception e) {
+                showError("Error processing GPX: " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Shows the statistics of the imported GPX activity in the UI.
+     * @param activity The activity object returned by the library.
+     */
+    private void displayStatistics(Activity activity) {
+        // Example assumes you have these Labels defined in FXML
+        // and using the method names from section 8.3.3
+
+        // Distance: convert meters to km for better readability
+        double kms = activity.getTotalDistance() / 1000.0;
+
+        System.out.println("Displaying stats for: " + activity.getName());
+
+        // Update your labels (ensure these @FXML IDs match your FXML file)
+        // If you don't have these labels yet, you'll need to add them to FXML
+        /*
+        distLabel.setText(String.format("%.2f km", kms));
+        durLabel.setText(formatDuration(activity.getDuration()));
+        speedLabel.setText(String.format("%.2f km/h", activity.getAverageSpeed()));
+        paceLabel.setText(String.format("%.2f min/km", activity.getAveragePace()));
+        posGainLabel.setText(String.format("%.0f m", activity.getElevationGain()));
+        negGainLabel.setText(String.format("%.0f m", activity.getElevationLoss()));
+        minAltLabel.setText(String.format("%.0f m", activity.getMinElevation()));
+        maxAltLabel.setText(String.format("%.0f m", activity.getMaxElevation()));
+        */
+    }
+
+    /**
+     * Draws the route on the mapPane using Polyline and highlights Start/End points.
+     */
+    private void drawRoute(Activity activity) {
+
+        List<TrackPoint> points = activity.getTrackPoints();
+        if (points.isEmpty()) return;
+
+        Polyline route = new Polyline();
+        route.setStroke(Color.BLUE);
+        route.setStrokeWidth(2);
+
+        for (TrackPoint p : points) {
+            Point2D pixel = geoToPixel(p.getLatitude(), p.getLongitude());
+            route.getPoints().addAll(pixel.getX(), pixel.getY());
+        }
+
+        // 2. Highlight Start (Green)
+        TrackPoint start = activity.getStartPoint();
+        Point2D startPx = geoToPixel(start.getLatitude(), start.getLongitude());
+        Circle startMarker = new Circle(startPx.getX(), startPx.getY(), 5, Color.GREEN);
+
+        // 3. Highlight End (Red)
+        TrackPoint end = activity.getEndPoint();
+        Point2D endPx = geoToPixel(end.getLatitude(), end.getLongitude());
+        Circle endMarker = new Circle(endPx.getX(), endPx.getY(), 5, Color.RED);
+
+        mapPane.getChildren().addAll(route, startMarker, endMarker);
+    }
+
+    /**
+     * Helper to translate GPS coordinates to Map Pixels.
+     * Note: You must adjust these bounds to match your "upv.jpg" image geographic coverage.
+     */
+    private Point2D geoToPixel(double lat, double lon) {
+        // Example bounds for UPV area (you must adjust these to your specific map)
+        double topLat = 39.485;
+        double bottomLat = 39.475;
+        double leftLon = -0.345;
+        double rightLon = -0.330;
+
+        double x = mapPane.getWidth() * (lon - leftLon) / (rightLon - leftLon);
+        double y = mapPane.getHeight() * (topLat - lat) / (topLat - bottomLat);
+
+        return new Point2D(x, y);
+    }
+
+    private String formatDuration(java.time.Duration d) {
+        long s = d.getSeconds();
+        return String.format("%02d:%02d:%02d", s / 3600, (s % 3600) / 60, (s % 60));
+    }
+
+    /**
+     * Error handling helper
+     */
+    private void showError(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
     // =========================================================

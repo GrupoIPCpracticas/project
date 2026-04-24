@@ -37,6 +37,7 @@ public class EditProfileController implements Initializable {
     private SportActivityApp app;
     private User currentUser;
     private Image currentAvatar;
+    private String avatarPath;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -47,9 +48,10 @@ public class EditProfileController implements Initializable {
         emailField.setText(currentUser.getEmail());
         dobPicker.setValue(currentUser.getBirthDate());
 
-        currentAvatar = currentUser.getAvatar();
-        if (currentAvatar != null) {
-            avatarView.setImage(currentAvatar);
+        avatarPath = currentUser.getAvatarPath();
+
+        if (avatarPath != null && !avatarPath.isEmpty()) {
+            avatarView.setImage(new Image(avatarPath));
         }
 
         setupValidation();
@@ -62,11 +64,10 @@ public class EditProfileController implements Initializable {
         });
 
         passField.textProperty().addListener((o, oldV, newV) -> {
-            // Valid if blank (keep current) OR follows library rules
             if (newV.isEmpty()) {
                 passErrorLabel.setText("");
             } else {
-                passErrorLabel.setText(User.checkPassword(newV) ? "" : "Weak password.");
+                passErrorLabel.setText(User.checkPassword(newV) ? "" : "8-20 chars: Upper, Lower, Digit, and Special.");
             }
             updateSaveButtonState();
         });
@@ -95,8 +96,8 @@ public class EditProfileController implements Initializable {
         File file = fileChooser.showOpenDialog(((Node)event.getSource()).getScene().getWindow());
 
         if (file != null) {
-            this.currentAvatar = new Image(file.toURI().toString());
-            this.avatarView.setImage(currentAvatar);
+            avatarPath = file.toURI().toString();
+            avatarView.setImage(new Image(avatarPath));
         }
     }
 
@@ -110,7 +111,7 @@ public class EditProfileController implements Initializable {
             pass = currentUser.getPassword();
         }
 
-        boolean success = app.updateCurrentUser(email, pass, dob, currentAvatar);
+        boolean success = app.updateCurrentUser(email, pass, dob, avatarPath);
 
         if (success) {
             handleBack(event);
