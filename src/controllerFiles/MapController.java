@@ -184,15 +184,11 @@ public class MapController implements Initializable {
         mapPane.setMinSize(W, H);  // impedimos que el layout lo encoja
         mapPane.setMaxSize(W, H);  // impedimos que el layout lo agrande
 
-        // Añadimos la imagen como fondo del Pane
         ImageView iv = new ImageView(img);
         iv.setFitWidth(W);
         iv.setFitHeight(H);
         mapPane.getChildren().add(iv);
 
-        // ── Manejador de clics sobre el mapa ──────────────────────────
-        // Gestionamos el clic derecho (menú contextual) y el clic izquierdo
-        // en modo inserción (FIX 2).
         mapPane.setOnMouseClicked(e -> {
             if (e.getButton() == MouseButton.SECONDARY) {
                 // Clic derecho → mostrar menú contextual
@@ -206,10 +202,6 @@ public class MapController implements Initializable {
             }
         });
 
-        // ── Jerarquía de Groups para el zoom ──────────────────────────
-        // contentGroup es el nodo raíz que recibe el ScrollPane.
-        // zoomGroup es el que se escala; anidar un Group dentro de otro
-        // evita que el ScrollPane reajuste su contenido durante el escalado.
         zoomGroup = new Group();
         Group contentGroup = new Group();
         zoomGroup.getChildren().add(mapPane);
@@ -285,7 +277,7 @@ public class MapController implements Initializable {
                 }
             }
         });
-        buildMap(new File("maps/upv.jpg"));
+        buildMap(new File("resources/upv.jpg"));
     }
 
     // =========================================================

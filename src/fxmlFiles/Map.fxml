@@ -26,13 +26,13 @@
                <items>
                   <VBox spacing="10.0">
                      <children>
-                        <Label style="-fx-font-weight: bold;" text="Mis Actividades">
+                        <Label style="-fx-font-weight: bold;" text="My Activities">
                            <VBox.margin>
                               <Insets left="5.0" top="5.0" />
                            </VBox.margin>
                         </Label>
                         <ListView fx:id="map_listview" onMouseClicked="#listClicked" VBox.vgrow="ALWAYS" />
-                        <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Importar GPX" />
+                        <Button maxWidth="1.7976931348623157E308" style="-fx-padding: 10 30; -fx-font-weight: bold; -fx-base: #2196F3; -fx-text-fill: white;" mnemonicParsing="false" text="Import GPX file" />
                      </children>
                      <padding>
                         <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
@@ -71,7 +71,7 @@
                         <MenuItem mnemonicParsing="false" onAction="#changeMap" text="Change Current Map" />
                      </items>
                   </Menu>
-                  <Menu mnemonicParsing="false" text="Ayuda">
+                  <Menu mnemonicParsing="false" text="Help">
                      <items>
                         <MenuItem mnemonicParsing="false" onAction="#about" text="About" />
                      </items>
@@ -101,7 +101,7 @@
          <children>
             <Label fx:id="mousePosition" text="Coord: (0, 0)" HBox.hgrow="ALWAYS" />
             <Region HBox.hgrow="ALWAYS" />
-            <Label fx:id="sessionStats" text="Sesión: 0 actividades importadas" />
+            <Label fx:id="sessionStats" text="Session: 0 activities imported" />
          </children>
          <BorderPane.margin>
             <Insets bottom="6.0" left="6.0" right="6.0" top="6.0" />

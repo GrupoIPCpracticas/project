@@ -8,16 +8,15 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox prefHeight="500.0" prefWidth="700.0" spacing="15.0" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllerFiles.SessionHistoryController">
+<VBox prefHeight="500.0" prefWidth="700.0" spacing="15.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllerFiles.SessionHistoryController">
     <padding>
         <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
     </padding>
     <children>
-        <Label style="-fx-font-size: 22px; -fx-font-weight: bold;" text="Historial de Sesiones" />
+        <Label style="-fx-font-size: 22px; -fx-font-weight: bold;" text="Session History" />
 
         <TableView fx:id="sessionTable" VBox.vgrow="ALWAYS">
             <columns>
-                <TableColumn fx:id="colDate" prefWidth="150.0" text="Fecha Inicio" />
                 <TableColumn fx:id="colDuration" prefWidth="100.0" text="Duración" />
                 <TableColumn fx:id="colImported" prefWidth="100.0" text="Importadas" />
                 <TableColumn fx:id="colViewed" prefWidth="100.0" text="Visualizadas" />
@@ -47,7 +46,7 @@
 
         <HBox alignment="CENTER_RIGHT">
             <children>
-                <Button mnemonicParsing="false" onAction="#handleBack" prefWidth="100.0" text="Volver" />
+                <Button mnemonicParsing="false" onAction="#handleBack" prefWidth="100.0" text="Go Back" />
             </children>
         </HBox>
     </children>

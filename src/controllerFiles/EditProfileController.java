@@ -92,10 +92,11 @@ public class EditProfileController implements Initializable {
         fileChooser.getExtensionFilters().addAll(
                 new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.gif")
         );
-        File selectedFile = fileChooser.showOpenDialog(null);
-        if (selectedFile != null) {
-            currentAvatar = new Image(selectedFile.toURI().toString());
-            avatarView.setImage(currentAvatar);
+        File file = fileChooser.showOpenDialog(((Node)event.getSource()).getScene().getWindow());
+
+        if (file != null) {
+            this.currentAvatar = new Image(file.toURI().toString());
+            this.avatarView.setImage(currentAvatar);
         }
     }
 

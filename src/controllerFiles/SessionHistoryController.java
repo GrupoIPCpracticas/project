@@ -41,15 +41,10 @@ public class SessionHistoryController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         app = SportActivityApp.getInstance();
+        colImported.setCellValueFactory(new PropertyValueFactory<>("ImportedActivities"));
+        colViewed.setCellValueFactory(new PropertyValueFactory<>("ViewedActivities"));
+        colAnnotations.setCellValueFactory(new PropertyValueFactory<>("AnnotationsCreated"));
 
-        // 1. Configure columns
-        // Property names must match the getter names in the Session class (e.g., getStartDate())
-        colDate.setCellValueFactory(new PropertyValueFactory<>("startDate"));
-        colImported.setCellValueFactory(new PropertyValueFactory<>("numImportedActivities"));
-        colViewed.setCellValueFactory(new PropertyValueFactory<>("numViewedActivities"));
-        colAnnotations.setCellValueFactory(new PropertyValueFactory<>("numAnnotationsCreated"));
-
-        // Duration usually needs formatting (converting seconds/minutes to HH:mm:ss)
         colDuration.setCellValueFactory(cellData -> {
             long seconds = cellData.getValue().getDuration().toSeconds();
             return new javafx.beans.property.SimpleStringProperty(formatDuration(seconds));
@@ -59,7 +54,6 @@ public class SessionHistoryController implements Initializable {
         ObservableList<Session> sessionData = FXCollections.observableArrayList(sessions);
         sessionTable.setItems(sessionData);
 
-        // 3. Calculate Cumulative Totals
         calculateTotals(sessions);
     }
 

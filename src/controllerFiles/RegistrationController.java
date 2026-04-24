@@ -10,11 +10,15 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import upv.ipc.sportlib.User;
 import upv.ipc.sportlib.SportActivityApp;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.time.LocalDate;
 import java.util.ResourceBundle;
@@ -35,6 +39,8 @@ public class RegistrationController implements Initializable {
     @FXML private Label dobErrorLabel;
 
     @FXML private Button registerButton;
+    @FXML private ImageView avatarView;
+    private Image currentAvatar;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -62,6 +68,16 @@ public class RegistrationController implements Initializable {
             else if (!User.isOlderThan(newV, 12)) dobErrorLabel.setText("Must be 12+ years old.");
             else dobErrorLabel.setText("");
         });
+
+        try {
+            InputStream is = getClass().getResourceAsStream("/resources/logo.png");
+            if (is != null) {
+                currentAvatar = new Image(is); // Update the variable!
+                avatarView.setImage(currentAvatar);
+            }
+        } catch (Exception e) {
+            System.out.println("Could not load default avatar. Check path: /resources/logo.png");
+        }
 
         BooleanBinding isInvalid = Bindings.createBooleanBinding(
                 () -> !User.checkNickName(nickField.getText()) ||
@@ -93,7 +109,7 @@ public class RegistrationController implements Initializable {
 
         SportActivityApp app = SportActivityApp.getInstance();
 
-        boolean registered = app.registerUser(nick, email, pass, dob, (Image) null);
+        boolean registered = app.registerUser(nick, email, pass, dob, currentAvatar);
         if(registered) {
             Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/Welcome.fxml"));
             switchScene(event, root, "Welcome - Running la Safor");
@@ -104,6 +120,20 @@ public class RegistrationController implements Initializable {
     private void handleBack(ActionEvent event) throws IOException {
         Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/Welcome.fxml"));
         switchScene(event, root, "Welcome - Running la Safor");
+    }
+
+    @FXML
+    private void handleSelectImage(ActionEvent event) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Select New Avatar");
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.gif")
+        );
+        File selectedFile = fileChooser.showOpenDialog(null);
+        if (selectedFile != null) {
+            currentAvatar = new Image(selectedFile.toURI().toString());
+            avatarView.setImage(currentAvatar);
+        }
     }
 
     private void switchScene(ActionEvent event, Parent root, String title) {
