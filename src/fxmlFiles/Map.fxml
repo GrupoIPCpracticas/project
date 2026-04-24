@@ -60,20 +60,20 @@
                <menus>
                   <Menu mnemonicParsing="false" text="Usuario">
                      <items>
-                        <MenuItem mnemonicParsing="false" text="Editar Perfil" />
-                        <MenuItem mnemonicParsing="false" text="Historial de Sesiones" />
+                        <MenuItem mnemonicParsing="false" onAction="#handleProfile" text="Edit Profile" />
+                        <MenuItem mnemonicParsing="false" onAction="#handleSessions" text="Session History" />
                         <MenuItem mnemonicParsing="false" onAction="#handleLogout" text="Log Out" />
                      </items>
                   </Menu>
                   <Menu mnemonicParsing="false" text="Mapas">
                      <items>
-                        <MenuItem mnemonicParsing="false" text="Añadir nuevo mapa..." />
+                        <MenuItem mnemonicParsing="false" text="Add new map" />
                         <MenuItem mnemonicParsing="false" onAction="#changeMap" text="Change Current Map" />
                      </items>
                   </Menu>
                   <Menu mnemonicParsing="false" text="Ayuda">
                      <items>
-                        <MenuItem mnemonicParsing="false" onAction="#about" text="Acerca de" />
+                        <MenuItem mnemonicParsing="false" onAction="#about" text="About" />
                      </items>
                   </Menu>
                </menus>

@@ -12,9 +12,13 @@ import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
@@ -81,6 +85,20 @@ public class MapController implements Initializable {
     void zoomIn(ActionEvent event) {
         double sliderVal = zoom_slider.getValue();
         zoom_slider.setValue(sliderVal + 0.1);
+    }
+
+    private void switchSceneButton(ActionEvent event, Parent root, String title) {
+        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        stage.setScene(new Scene(root));
+        stage.setTitle(title);
+        stage.show();
+    }
+
+    private void switchSceneMenu(ActionEvent event, Parent root, String title) {
+        Stage stage = (Stage) map_scrollpane.getScene().getWindow();
+        stage.setScene(new Scene(root));
+        stage.setTitle(title);
+        stage.show();
     }
 
     /**
@@ -309,10 +327,27 @@ public class MapController implements Initializable {
         mensaje.showAndWait(); // Bloquea hasta que el usuario cierra el diálogo
     }
 
+
+
     @FXML
-    private void handleLogout(ActionEvent event){
+    private void handleLogout(ActionEvent event) throws IOException {
         SportActivityApp app = SportActivityApp.getInstance();
         app.logout();
+        Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/Welcome.fxml"));
+        switchSceneMenu(event, root, "Demo mapas - IPC");
+
+    }
+
+    @FXML
+    private void handleProfile(ActionEvent event) throws IOException{
+        Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/EditProfile.fxml"));
+        switchSceneMenu(event, root, "Edit Profile");
+    }
+
+    @FXML
+    private void handleSessions(ActionEvent event) throws IOException{
+        Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/SessionsHistory.fxml"));
+        switchSceneMenu(event, root, "Sessions History");
     }
 
     // =========================================================

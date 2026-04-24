@@ -51,7 +51,7 @@ public class LoginController implements Initializable {
 
         boolean authenticated = app.login(nick, pass);
 
-        if (true) {
+        if (authenticated) {
             navigateToMainMap(event);
         } else {
             errorLabel.setText("Invalid nickname or password.");
