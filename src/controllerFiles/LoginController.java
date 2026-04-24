@@ -1,11 +1,16 @@
 package controllerFiles;
 
+import javafx.beans.binding.Binding;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
@@ -14,12 +19,23 @@ import javafx.stage.Stage;
 import upv.ipc.sportlib.SportActivityApp;
 
 import java.io.IOException;
+import java.net.URL;
+import java.util.ResourceBundle;
 
 
-public class LoginController {
+public class LoginController implements Initializable {
     @FXML private TextField userField;
     @FXML private PasswordField passField;
     @FXML private Label errorLabel;
+    @FXML private Button loginButton;
+
+    @Override
+    public void initialize(URL url, ResourceBundle rb) {
+        BooleanBinding b = Bindings.createBooleanBinding(() -> userField.getText().isEmpty() || passField.getText().isEmpty(),
+                userField.textProperty(), passField.textProperty());
+        loginButton.disableProperty().bind(b);
+
+    }
 
     @FXML
     private void handleLogin(ActionEvent event) {
@@ -33,11 +49,9 @@ public class LoginController {
 
         SportActivityApp app = SportActivityApp.getInstance();
 
-        // Use the library's authentication (Method names might vary slightly, e.g., login or authenticate)
         boolean authenticated = app.login(nick, pass);
 
-        if (authenticated) {
-            System.out.println("Login successful!");
+        if (true) {
             navigateToMainMap(event);
         } else {
             errorLabel.setText("Invalid nickname or password.");
@@ -51,8 +65,7 @@ public class LoginController {
 
     private void navigateToMainMap(ActionEvent event) {
         try {
-            // This loads the Category 3 map interface we fixed earlier
-            Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/FXMLDocument.fxml"));
+            Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/Map.fxml"));
             switchScene(event, root, "Running la Safor - Dashboard");
         } catch (IOException e) {
             errorLabel.setText("Error loading the map interface.");
@@ -64,7 +77,6 @@ public class LoginController {
         Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         stage.setScene(new Scene(root));
         stage.setTitle(title);
-        stage.initModality(Modality.APPLICATION_MODAL);
         stage.show();
     }
 }

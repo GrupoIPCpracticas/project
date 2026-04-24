@@ -32,7 +32,7 @@
                            <children>
                               <ImageView pickOnBounds="true">
                                  <image>
-                                    <Image url="@../maps/upv.jpg" />
+                                    <Image url="/maps/upv.jpg" />
                                  </image>
                               </ImageView>
                            </children>

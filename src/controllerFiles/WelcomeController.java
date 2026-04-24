@@ -34,11 +34,10 @@ public class WelcomeController implements Initializable {
         try {
             Parent root = FXMLLoader.load(getClass().getResource(fxmlPath));
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            Scene scene = new Scene(root);
+            Scene scene = new Scene(root, 500, 500);
             stage.setTitle(title);
             stage.setScene(scene);
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.showAndWait();
+            stage.show();
 
         } catch (IOException e) {
             System.err.println("Error loading FXML: " + fxmlPath);
