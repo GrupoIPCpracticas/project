@@ -46,6 +46,7 @@ import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import upv.ipc.sportlib.MapRegion;
 import upv.ipc.sportlib.SportActivityApp;
 import upv.ipc.sportlib.Activity;
 import upv.ipc.sportlib.TrackPoint;
@@ -53,31 +54,26 @@ import javafx.scene.shape.Polyline;
 
 public class MapController implements Initializable {
 
-    /** Group que se escala para aplicar el zoom. */
     private Group zoomGroup;
 
-    @FXML
-    private Pane mapPane;
+    @FXML private Pane mapPane;
 
     private ContextMenu mapContextMenu;
 
     private boolean insertionMode = false;
 
-    @FXML
-    private ListView<Poi> map_listview;
+    @FXML private ListView<Poi> map_listview;
 
-    @FXML
-    private ScrollPane map_scrollpane;
+    @FXML private ScrollPane map_scrollpane;
 
-    @FXML
-    private Slider zoom_slider;
+    @FXML private Slider zoom_slider;
 
     private MenuButton map_pin;
 
-    @FXML
-    private Label mousePosition;
-    @FXML
-    private SplitPane splitPane;
+    @FXML private Label mousePosition;
+    @FXML private SplitPane splitPane;
+
+    @FXML private ImageView mapView;
 
     private SportActivityApp app;
 
@@ -125,7 +121,6 @@ public class MapController implements Initializable {
 
 
     /*
-     *
      * @param event evento de ratón sobre el ListView
      */
     @FXML
@@ -164,35 +159,36 @@ public class MapController implements Initializable {
      * @param imgFile fichero de imagen a cargar como fondo del mapa
      */
     private void buildMap(File imgFile) {
-        // Comprobación defensiva: si el fichero no existe mostramos un aviso
         if (!imgFile.exists()) {
             map_scrollpane.setContent(
-                new Label("Imagen no encontrada: " + imgFile.getPath()));
+                new Label("Imagen no encontrada: " + imgFile.getAbsolutePath()));
             return;
         }
 
-        // Cargamos la imagen y obtenemos sus dimensiones reales en píxeles
         Image img = new Image(imgFile.toURI().toString());
         double W = img.getWidth();
         double H = img.getHeight();
 
         mapPane = new Pane();
-        mapPane.setPrefSize(W, H); // tamaño preferido = tamaño de la imagen
-        mapPane.setMinSize(W, H);  // impedimos que el layout lo encoja
-        mapPane.setMaxSize(W, H);  // impedimos que el layout lo agrande
+        mapPane.setPrefSize(W, H);
+        mapPane.setMinSize(W, H);
+        mapPane.setMaxSize(W, H);
 
         ImageView iv = new ImageView(img);
-        iv.setFitWidth(W);
-        iv.setFitHeight(H);
-        mapPane.getChildren().add(iv);
+        mapView.setImage(img);
+        mapView.setFitWidth(W);
+        mapView.setFitHeight(H);
 
+        mapView.setLayoutX(0);
+        mapView.setLayoutY(0);
+
+
+        mapPane.getChildren().add(iv);
         mapPane.setOnMouseClicked(e -> {
             if (e.getButton() == MouseButton.SECONDARY) {
-                // Clic derecho → mostrar menú contextual
                 onMapRightClick(e.getX(), e.getY());
 
             } else if (e.getButton() == MouseButton.PRIMARY && insertionMode) {
-                // FIX 2: clic izquierdo en modo inserción → añadir POI y desactivar modo
                 insertionMode = false;
                 mapPane.setStyle(""); // Restauramos el cursor normal
                 addPoi(e.getX(), e.getY());
@@ -204,12 +200,11 @@ public class MapController implements Initializable {
         zoomGroup.getChildren().add(mapPane);
         contentGroup.getChildren().add(zoomGroup);
 
-        // Aplicamos el zoom actual (valor actual del slider)
+
         double zoom = zoom_slider.getValue();
         zoomGroup.setScaleX(zoom);
         zoomGroup.setScaleY(zoom);
 
-        // Asignamos el contentGroup como contenido del ScrollPane
         map_scrollpane.setContent(contentGroup);
 
     }
@@ -257,8 +252,8 @@ public class MapController implements Initializable {
             (observable, oldVal, newVal) -> zoom((Double) newVal)
         );
 
-        MenuItem miText   = new MenuItem("📝 Añadir texto");
-        MenuItem miCircle = new MenuItem("⭕ Añadir círculo");
+        MenuItem miText   = new MenuItem("📝 Add Text");
+        MenuItem miCircle = new MenuItem("⭕ Add Point");
         mapContextMenu = new ContextMenu(miText, miCircle);
 
         map_listview.setCellFactory(listView -> new ListCell<Poi>() {
@@ -274,7 +269,8 @@ public class MapController implements Initializable {
                 }
             }
         });
-        buildMap(new File("resources/upv.jpg"));
+        buildMap(new File("mapas/upv.jpg"));
+        app = SportActivityApp.getInstance();
     }
 
     // =========================================================
@@ -304,16 +300,14 @@ public class MapController implements Initializable {
     @FXML
     private void about(ActionEvent event) {
         Alert mensaje = new Alert(Alert.AlertType.INFORMATION);
-
-        // Personalizamos el icono de la ventana del diálogo
         Stage dialogStage = (Stage) mensaje.getDialogPane().getScene().getWindow();
         dialogStage.getIcons().add(
-            new Image(getClass().getResourceAsStream("/resources/logo.png"))
+            new Image(getClass().getResourceAsStream("../resources/logo.png"))
         );
 
-        mensaje.setTitle("Acerca de");
+        mensaje.setTitle("About");
         mensaje.setHeaderText("IPC - 2026");
-        mensaje.showAndWait(); // Bloquea hasta que el usuario cierra el diálogo
+        mensaje.showAndWait();
     }
 
     @FXML
@@ -349,8 +343,14 @@ public class MapController implements Initializable {
                 Activity activity = app.importActivity(file);
 
                 if (activity != null) {
+                    MapRegion region = activity.getSuggestedMap();
+
+                    File mapImageFile = new File(region.getImagePath());
+                    buildMap(mapImageFile);
+
                     displayStatistics(activity);
                     drawRoute(activity);
+
                 }
             } catch (Exception e) {
                 showError("Error processing GPX: " + e.getMessage());
