@@ -160,53 +160,48 @@ public class MapController implements Initializable {
      */
     private void buildMap(File imgFile) {
         if (!imgFile.exists()) {
-            map_scrollpane.setContent(
-                new Label("Imagen no encontrada: " + imgFile.getAbsolutePath()));
+            map_scrollpane.setContent(new Label("Image not found: " + imgFile.getAbsolutePath()));
             return;
         }
 
         Image img = new Image(imgFile.toURI().toString());
-        double W = img.getWidth();
-        double H = img.getHeight();
+        double w = img.getWidth();
+        double h = img.getHeight();
 
-        mapPane = new Pane();
-        mapPane.setPrefSize(W, H);
-        mapPane.setMinSize(W, H);
-        mapPane.setMaxSize(W, H);
+        mapPane.getChildren().clear();
 
-        ImageView iv = new ImageView(img);
-        mapView.setImage(img);
-        mapView.setFitWidth(W);
-        mapView.setFitHeight(H);
+        ImageView background = new ImageView(img);
+        background.setFitWidth(w);
+        background.setFitHeight(h);
+        background.setPreserveRatio(true);
+        mapPane.getChildren().add(background);
 
-        mapView.setLayoutX(0);
-        mapView.setLayoutY(0);
+        mapPane.setPrefSize(w, h);
+        mapPane.setMinSize(w, h);
+        mapPane.setMaxSize(w, h);
 
-
-        mapPane.getChildren().add(iv);
         mapPane.setOnMouseClicked(e -> {
             if (e.getButton() == MouseButton.SECONDARY) {
                 onMapRightClick(e.getX(), e.getY());
-
             } else if (e.getButton() == MouseButton.PRIMARY && insertionMode) {
                 insertionMode = false;
-                mapPane.setStyle(""); // Restauramos el cursor normal
+                mapPane.setStyle("");
                 addPoi(e.getX(), e.getY());
             }
         });
 
-        zoomGroup = new Group();
-        Group contentGroup = new Group();
-        zoomGroup.getChildren().add(mapPane);
-        contentGroup.getChildren().add(zoomGroup);
+        if (zoomGroup == null) {
+            zoomGroup = new Group(mapPane);
+        } else {
+            zoomGroup.getChildren().setAll(mapPane);
+        }
 
-
-        double zoom = zoom_slider.getValue();
-        zoomGroup.setScaleX(zoom);
-        zoomGroup.setScaleY(zoom);
-
+        Group contentGroup = new Group(zoomGroup);
         map_scrollpane.setContent(contentGroup);
 
+        double zoomLevel = zoom_slider.getValue();
+        zoomGroup.setScaleX(zoomLevel);
+        zoomGroup.setScaleY(zoomLevel);
     }
 
     // =========================================================
@@ -269,7 +264,7 @@ public class MapController implements Initializable {
                 }
             }
         });
-        buildMap(new File("mapas/upv.jpg"));
+        buildMap(new File("maps/upv.jpg"));
         app = SportActivityApp.getInstance();
     }
 
@@ -348,8 +343,8 @@ public class MapController implements Initializable {
                     File mapImageFile = new File(region.getImagePath());
                     buildMap(mapImageFile);
 
-                    displayStatistics(activity);
-                    drawRoute(activity);
+                    //displayStatistics(activity);
+                    //drawRoute(activity);
 
                 }
             } catch (Exception e) {
