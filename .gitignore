@@ -3,6 +3,7 @@ lib/
 IPCprojectlib/
 nbproject/
 out/
+sportactivity.db
 
 # IDE and Editor
 .idea/

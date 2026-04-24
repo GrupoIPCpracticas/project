@@ -20,7 +20,7 @@
  *
  *  PATRÓN UTILIZADO: MVC (Model-View-Controller)
  *   - Modelo : clase Poi  (datos del punto de interés)
- *   - Vista  : FXMLDocument.fxml  (layout declarativo)
+ *   - Vista  : Map.fxml  (layout declarativo)
  *   - Control: esta clase (lógica de interacción)
  *
  * ============================================================
@@ -78,7 +78,7 @@ import javafx.util.Duration;
  * Implementa {@link Initializable} para poder ejecutar código de
  * inicialización una vez que el FXML ha sido cargado completamente.
  */
-public class FXMLDocumentController implements Initializable {
+public class MapController implements Initializable {
 
     // =========================================================
     //  ESTRUCTURA DE NODOS PARA ZOOM

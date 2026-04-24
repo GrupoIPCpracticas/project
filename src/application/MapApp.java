@@ -9,18 +9,19 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.image.Image;
 import javafx.stage.Stage;
+import upv.ipc.sportlib.SportActivityApp;
 
 /**
  *
  * @author jose
  */
-public class MapaDemoApp extends Application {
+public class MapApp extends Application {
     
     @Override
     public void start(Stage stage) throws Exception {
-        Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/FXMLDocument.fxml"));
+        SportActivityApp app = SportActivityApp.getInstance();
+        Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/Welcome.fxml"));
         Scene scene = new Scene(root);
         stage.setTitle("Demo mapas - IPC");
         stage.setScene(scene);

@@ -19,7 +19,7 @@
 <?import javafx.scene.layout.VBox?>
 
 
-<BorderPane xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllerFiles.FXMLDocumentController">
+<BorderPane xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllerFiles.MapController">
    <center>
       <VBox prefHeight="556.0" prefWidth="853.0">
          <children>
