@@ -219,7 +219,7 @@ public class MapController implements Initializable {
         }
     }
 
-    // Auxiliary methods
+    // Auxiliary method
 
     private void refreshActivityList() {
         List<Activity> activities = app.getUserActivities();
