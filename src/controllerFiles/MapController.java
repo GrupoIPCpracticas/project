@@ -44,7 +44,7 @@ public class MapController implements Initializable {
     private Group zoomGroup;
 
     @FXML private Pane mapPane;
-    @FXML private ListView<Poi> map_listview;
+    @FXML private ListView<Activity> map_listview;
     @FXML private ScrollPane map_scrollpane;
     @FXML private Slider zoom_slider;
     @FXML private Label mousePosition;
@@ -65,11 +65,13 @@ public class MapController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        app = SportActivityApp.getInstance();
         statsButton.setDisable(true);
         zoom_slider.setMin(0.5);   // zoom mínimo: 50 %
         zoom_slider.setMax(1.5);   // zoom máximo: 150 %
         zoom_slider.setValue(1.0); // valor inicial: 100 %
 
+        refreshActivityList();
         zoom_slider.valueProperty().addListener(
                 (observable, oldVal, newVal) -> zoom((Double) newVal)
         );
@@ -78,21 +80,42 @@ public class MapController implements Initializable {
         MenuItem miCircle = new MenuItem("⭕ Add Point");
         mapContextMenu = new ContextMenu(miText, miCircle);
 
-        map_listview.setCellFactory(listView -> new ListCell<Poi>() {
-            @Override
-            protected void updateItem(Poi poi, boolean empty) {
-                super.updateItem(poi, empty);
+        map_listview.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                statsButton.setDisable(false);
+                loadActivityData(newVal);
+            }
+        });
 
-                if (empty || poi == null) {
+        map_listview.setCellFactory(lv -> new ListCell<>() {
+            @Override
+            protected void updateItem(Activity activity, boolean empty) {
+                super.updateItem(activity, empty);
+                if (empty || activity == null) {
                     setText(null);
                     setGraphic(null);
                 } else {
-                    setText(poi.getCode() + " – " + poi.getPosition());
+                    String date = activity.getStartTime().toLocalDate().toString();
+                    setText(activity.getName() + " — " + date);
+                    setStyle("-fx-font-size: 14px; -fx-padding: 5px;");
                 }
             }
         });
         buildMap(new File("maps/upv.jpg"));
-        app = SportActivityApp.getInstance();
+    }
+
+    @FXML
+    private void changeMap(ActionEvent event) throws IOException {
+        FileChooser fc = new FileChooser();
+        fc.setInitialDirectory(new File("."));
+
+        File imgFile = fc.showOpenDialog(zoom_slider.getScene().getWindow());
+
+        if (imgFile != null) {
+            System.out.println("Mapa seleccionado: " + imgFile.getCanonicalPath());
+            buildMap(imgFile);
+            map_listview.getItems().clear();
+        }
     }
 
     @FXML
@@ -130,30 +153,7 @@ public class MapController implements Initializable {
 
     @FXML
     void listClicked(MouseEvent event) {
-        Poi itemSelected = map_listview.getSelectionModel().getSelectedItem();
-        if (itemSelected == null) return;
 
-        double mapWidth  = mapPane.getWidth()  * zoomGroup.getScaleX();
-        double mapHeight = mapPane.getHeight() * zoomGroup.getScaleY();
-
-        double poiX = itemSelected.getPosition().getX() * zoomGroup.getScaleX();
-        double poiY = itemSelected.getPosition().getY() * zoomGroup.getScaleY();
-
-        double viewW = map_scrollpane.getViewportBounds().getWidth();
-        double viewH = map_scrollpane.getViewportBounds().getHeight();
-
-        double scrollH = (poiX - viewW / 2) / (mapWidth  - viewW);
-        double scrollV = (poiY - viewH / 2) / (mapHeight - viewH);
-
-        scrollH = Math.max(0, Math.min(1, scrollH));
-        scrollV = Math.max(0, Math.min(1, scrollV));
-
-        final Timeline timeline = new Timeline();
-        final KeyValue kv1 = new KeyValue(map_scrollpane.hvalueProperty(), scrollH);
-        final KeyValue kv2 = new KeyValue(map_scrollpane.vvalueProperty(), scrollV);
-        final KeyFrame kf  = new KeyFrame(Duration.millis(500), kv1, kv2);
-        timeline.getKeyFrames().add(kf);
-        timeline.play();
     }
 
     @FXML
@@ -202,7 +202,10 @@ public class MapController implements Initializable {
         if (file != null) {
             try {
                 currentActivity = app.importActivity(file);
+
                 if (currentActivity != null) {
+                    refreshActivityList();
+                    map_listview.getSelectionModel().select(currentActivity);
                     currentRegion = currentActivity.getSuggestedMap();
                     File mapImageFile = new File(currentRegion.getImagePath());
                     Image img = buildMap(mapImageFile);
@@ -217,6 +220,31 @@ public class MapController implements Initializable {
     }
 
     // Auxiliary methods
+
+    private void refreshActivityList() {
+        List<Activity> activities = app.getUserActivities();
+        map_listview.getItems().setAll(activities);
+    }
+
+    private void loadActivityData(Activity activity) {
+        currentActivity = activity;
+        currentRegion = activity.getSuggestedMap();
+        if (currentRegion == null) {
+            showError("No map region found for this activity.");
+            return;
+        }
+        File mapFile = new File(currentRegion.getImagePath());
+        Image mapImage = buildMap(mapFile);
+
+        if (mapImage != null) {
+            this.projection = new MapProjection(currentRegion, mapImage.getWidth(), mapImage.getHeight());
+            drawRoute(activity);
+            for (Annotation ann : activity.getAnnotations()) {
+                displayAnnotation(ann);
+            }
+
+        }
+    }
 
     private void showInformation(String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -311,7 +339,6 @@ public class MapController implements Initializable {
             if (dialogButton == saveButtonType) {
                 AnnotationType type = typeCombo.getValue();
 
-                // POINT and TEXT only need one click. We can save them NOW.
                 if (type == AnnotationType.POINT || type == AnnotationType.TEXT) {
                     return new Annotation(type, textDescription.getText(), toHex(picker.getValue()), 2.0, List.of(geoPoint));
                 } else {
@@ -449,56 +476,39 @@ public class MapController implements Initializable {
     }
 
     private void addPoi(double x, double y) {
+        if (currentActivity == null || projection == null) {
+            showError("Please select or import an activity first.");
+            return;
+        }
 
-        Dialog<Poi> poiDialog = new Dialog<>();
-        poiDialog.setTitle("Nuevo POI");
-        poiDialog.setHeaderText("Introduce un nuevo POI");
-
-        Stage dialogStage = (Stage) poiDialog.getDialogPane().getScene().getWindow();
-        dialogStage.getIcons().add(
-            new Image(getClass().getResourceAsStream("/resources/logo.png"))
-        );
-
-        ButtonType okButton = new ButtonType("Aceptar", ButtonBar.ButtonData.OK_DONE);
+        Dialog<Annotation> poiDialog = new Dialog<>();
+        poiDialog.setTitle("New Point of Interest");
+        poiDialog.setHeaderText("Mark a location on the map");
+        ButtonType okButton = new ButtonType("Accept", ButtonBar.ButtonData.OK_DONE);
         poiDialog.getDialogPane().getButtonTypes().addAll(okButton, ButtonType.CANCEL);
-
         TextField nameField = new TextField();
-        nameField.setPromptText("Nombre del POI");
-
-        VBox vbox = new VBox(10, new Label("Nombre:"), nameField);
+        nameField.setPromptText("Name of POI (e.g. Refreshment Point)");
+        VBox vbox = new VBox(10, new Label("Name:"), nameField);
         poiDialog.getDialogPane().setContent(vbox);
-
+        GeoPoint geoPos = projection.unproject(x, y);
         poiDialog.setResultConverter(dialogButton -> {
             if (dialogButton == okButton) {
-            return new Poi(nameField.getText().trim(), x, y);
+                return new Annotation(
+                        AnnotationType.POINT,
+                        nameField.getText().trim(),
+                        "#3498db", // Nice blue color
+                        2.0,
+                        List.of(geoPos)
+                );
             }
             return null;
         });
-
-        Optional<Poi> result = poiDialog.showAndWait();
-
+        Optional<Annotation> result = poiDialog.showAndWait();
         if (result.isPresent()) {
-            Poi poi = result.get();
-            poi.setPosition(new Point2D(x, y));
-            map_listview.getItems().add(poi);
-            Text text = new Text(poi.getCode());
-            text.setX(x);
-            text.setY(y);
-            mapPane.getChildren().add(text);
-        }
-    }
-
-    @FXML
-    private void changeMap(ActionEvent event) throws IOException {
-        FileChooser fc = new FileChooser();
-        fc.setInitialDirectory(new File("."));
-
-        File imgFile = fc.showOpenDialog(zoom_slider.getScene().getWindow());
-
-        if (imgFile != null) {
-            System.out.println("Mapa seleccionado: " + imgFile.getCanonicalPath());
-            buildMap(imgFile);
-            map_listview.getItems().clear();
+            Annotation saved = app.addAnnotation(currentActivity, result.get());
+            if (saved != null) {
+                displayAnnotation(saved);
+            }
         }
     }
 
