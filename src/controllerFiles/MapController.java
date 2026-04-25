@@ -58,55 +58,61 @@ public class MapController implements Initializable {
     private MapRegion currentRegion;
     private Activity currentActivity = null;
 
-    private void switchSceneMenu(ActionEvent event, Parent root, String title, boolean wait) {
-        if (wait) {
-            Stage stage = new Stage();
-            stage.setTitle(title);
-            stage.setScene(new Scene(root));
-            stage.initModality(Modality.APPLICATION_MODAL);
-            Stage mainStage = (Stage) map_scrollpane.getScene().getWindow();
-            stage.initOwner(mainStage);
-            stage.showAndWait();
 
-        } else {
-            Stage stage = (Stage) map_scrollpane.getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.setTitle(title);
-            stage.show();
-        }
+    @Override
+    public void initialize(URL url, ResourceBundle rb) {
+        statsButton.setDisable(true);
+        zoom_slider.setMin(0.5);   // zoom mínimo: 50 %
+        zoom_slider.setMax(1.5);   // zoom máximo: 150 %
+        zoom_slider.setValue(1.0); // valor inicial: 100 %
+
+        zoom_slider.valueProperty().addListener(
+                (observable, oldVal, newVal) -> zoom((Double) newVal)
+        );
+
+        MenuItem miText   = new MenuItem("📝 Add Text");
+        MenuItem miCircle = new MenuItem("⭕ Add Point");
+        mapContextMenu = new ContextMenu(miText, miCircle);
+
+        map_listview.setCellFactory(listView -> new ListCell<Poi>() {
+            @Override
+            protected void updateItem(Poi poi, boolean empty) {
+                super.updateItem(poi, empty);
+
+                if (empty || poi == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    setText(poi.getCode() + " – " + poi.getPosition());
+                }
+            }
+        });
+        buildMap(new File("maps/upv.jpg"));
+        app = SportActivityApp.getInstance();
     }
 
-    private void switchSceneButton(ActionEvent event, Parent root, String title) {
-        Stage stage = (Stage) ((Node)event.getSource()).getScene().getWindow();
-        stage.setScene(new Scene(root));
-        stage.setTitle(title);
-        stage.show();
+    @FXML
+    private void showPosition(MouseEvent event) {
+        mousePosition.setText(
+                "sceneX: " + (int) event.getSceneX() +
+                        ", sceneY: " + (int) event.getSceneY() + "\n" +
+                        "         X: " + (int) event.getX() +
+                        ",          Y: " + (int) event.getY()
+        );
     }
 
-    /**
-     * Aumenta el zoom en 0.1 unidades al pulsar el botón "+".
-     *
-     * @param event evento de acción del botón
-     */
     @FXML
     void zoomIn(ActionEvent event) {
         double sliderVal = zoom_slider.getValue();
         zoom_slider.setValue(sliderVal + 0.1);
     }
 
-    /**
-     * Reduce el zoom en 0.1 unidades al pulsar el botón "–".
-     *
-     * @param event evento de acción del botón
-     */
     @FXML
     void zoomOut(ActionEvent event) {
         double sliderVal = zoom_slider.getValue();
         zoom_slider.setValue(sliderVal - 0.1);
     }
-    /*
-     * @param scaleValue nuevo factor de escala (p. ej. 1.2 → 120 %)
-     */
+
     private void zoom(double scaleValue) {
         double scrollH = map_scrollpane.getHvalue();
         double scrollV = map_scrollpane.getVvalue();
@@ -118,10 +124,6 @@ public class MapController implements Initializable {
         map_scrollpane.setVvalue(scrollV);
     }
 
-
-    /*
-     * @param event evento de ratón sobre el ListView
-     */
     @FXML
     void listClicked(MouseEvent event) {
         Poi itemSelected = map_listview.getSelectionModel().getSelectedItem();
@@ -165,13 +167,53 @@ public class MapController implements Initializable {
 
     }
 
-    // =========================================================
-    //  CONSTRUCCIÓN DEL MAPA
-    // =========================================================
+    @FXML
+    private void handleLogout(ActionEvent event) throws IOException {
+        SportActivityApp app = SportActivityApp.getInstance();
+        app.logout();
+        Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/Welcome.fxml"));
+        switchSceneMenu(event, root, "Demo mapas - IPC", false);
 
-    /*
-     * @param imgFile fichero de imagen a cargar como fondo del mapa
-     */
+    }
+
+    @FXML
+    private void handleProfile(ActionEvent event) throws IOException{
+        Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/EditProfile.fxml"));
+        switchSceneMenu(event, root, "Edit Profile", false);
+    }
+
+    @FXML
+    private void handleSessions(ActionEvent event) throws IOException{
+        Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/SessionsHistory.fxml"));
+        switchSceneMenu(event, root, "Sessions History", false);
+    }
+
+    @FXML
+    private void handleImportGPX(ActionEvent event) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Select GPX File");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("GPX Files", "*.gpx"));
+        File file = fileChooser.showOpenDialog(((Node)event.getSource()).getScene().getWindow());
+
+        if (file != null) {
+            try {
+                currentActivity = app.importActivity(file);
+                if (currentActivity != null) {
+                    statsButton.setDisable(false);
+                    currentRegion = currentActivity.getSuggestedMap();
+                    File mapImageFile = new File(currentRegion.getImagePath());
+                    buildMap(mapImageFile);
+                    this.projection = new MapProjection(currentRegion, mapPane.getWidth(), mapPane.getHeight());
+                    drawRoute(currentActivity);
+                }
+            } catch (Exception e) {
+                showError("Error processing GPX: " + e.getMessage());
+            }
+        }
+    }
+
+    // Auxiliary methods
+
     private void buildMap(File imgFile) {
         if (!imgFile.exists()) {
             map_scrollpane.setContent(new Label("Image not found: " + imgFile.getAbsolutePath()));
@@ -218,14 +260,6 @@ public class MapController implements Initializable {
         zoomGroup.setScaleY(zoomLevel);
     }
 
-    // =========================================================
-    //  MENÚ CONTEXTUAL (clic derecho sobre el mapa)
-    // =========================================================
-
-    /**
-     * @param x coordenada X del clic en el sistema local del mapPane
-     * @param y coordenada Y del clic en el sistema local del mapPane
-     */
     private void onMapRightClick(double x, double y) {
         if (currentActivity == null || projection == null) return;
 
@@ -304,121 +338,7 @@ public class MapController implements Initializable {
                 (int)(c.getBlue() * 255));
     }
 
-    // =========================================================
-    //  INICIALIZACIÓN DEL CONTROLADOR
-    // =========================================================
 
-    /**
-     *
-     * @param url  URL del documento FXML (no usado aquí)
-     * @param rb   paquete de recursos de internacionalización (no usado aquí)
-     */
-    @Override
-    public void initialize(URL url, ResourceBundle rb) {
-        statsButton.setDisable(true);
-        zoom_slider.setMin(0.5);   // zoom mínimo: 50 %
-        zoom_slider.setMax(1.5);   // zoom máximo: 150 %
-        zoom_slider.setValue(1.0); // valor inicial: 100 %
-
-        zoom_slider.valueProperty().addListener(
-            (observable, oldVal, newVal) -> zoom((Double) newVal)
-        );
-
-        MenuItem miText   = new MenuItem("📝 Add Text");
-        MenuItem miCircle = new MenuItem("⭕ Add Point");
-        mapContextMenu = new ContextMenu(miText, miCircle);
-
-        map_listview.setCellFactory(listView -> new ListCell<Poi>() {
-            @Override
-            protected void updateItem(Poi poi, boolean empty) {
-                super.updateItem(poi, empty);
-
-                if (empty || poi == null) {
-                    setText(null);
-                    setGraphic(null);
-                } else {
-                    setText(poi.getCode() + " – " + poi.getPosition());
-                }
-            }
-        });
-        buildMap(new File("maps/upv.jpg"));
-        app = SportActivityApp.getInstance();
-    }
-
-    // =========================================================
-    //  INDICADOR DE POSICIÓN DEL RATÓN
-    // =========================================================
-
-    /**
-     * @param event evento de movimiento del ratón
-     */
-    @FXML
-    private void showPosition(MouseEvent event) {
-        mousePosition.setText(
-            "sceneX: " + (int) event.getSceneX() +
-            ", sceneY: " + (int) event.getSceneY() + "\n" +
-            "         X: " + (int) event.getX() +
-            ",          Y: " + (int) event.getY()
-        );
-    }
-
-    // =========================================================
-    //  DIÁLOGO "ACERCA DE"
-    // =========================================================
-
-    /**
-     * @param event evento de acción del menú
-     */
-
-    @FXML
-    private void handleLogout(ActionEvent event) throws IOException {
-        SportActivityApp app = SportActivityApp.getInstance();
-        app.logout();
-        Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/Welcome.fxml"));
-        switchSceneMenu(event, root, "Demo mapas - IPC", false);
-
-    }
-
-    @FXML
-    private void handleProfile(ActionEvent event) throws IOException{
-        Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/EditProfile.fxml"));
-        switchSceneMenu(event, root, "Edit Profile", false);
-    }
-
-    @FXML
-    private void handleSessions(ActionEvent event) throws IOException{
-        Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/SessionsHistory.fxml"));
-        switchSceneMenu(event, root, "Sessions History", false);
-    }
-
-    @FXML
-    private void handleImportGPX(ActionEvent event) {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Select GPX File");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("GPX Files", "*.gpx"));
-        File file = fileChooser.showOpenDialog(((Node)event.getSource()).getScene().getWindow());
-
-        if (file != null) {
-            try {
-                currentActivity = app.importActivity(file);
-                if (currentActivity != null) {
-                    statsButton.setDisable(false);
-                    currentRegion = currentActivity.getSuggestedMap();
-                    File mapImageFile = new File(currentRegion.getImagePath());
-                    buildMap(mapImageFile);
-                    this.projection = new MapProjection(currentRegion, mapPane.getWidth(), mapPane.getHeight());
-                    drawRoute(currentActivity);
-                }
-            } catch (Exception e) {
-                showError("Error processing GPX: " + e.getMessage());
-            }
-        }
-    }
-
-
-    /**
-     * Draws the route on the mapPane using Polyline and highlights Start/End points.
-     */
     private void drawRoute(Activity activity) {
         List<TrackPoint> points = activity.getTrackPoints();
         if (points == null || points.isEmpty()) return;
@@ -458,14 +378,6 @@ public class MapController implements Initializable {
         return new Point2D(x, y);
     }
 
-    private String formatDuration(java.time.Duration d) {
-        long s = d.getSeconds();
-        return String.format("%02d:%02d:%02d", s / 3600, (s % 3600) / 60, (s % 60));
-    }
-
-    /**
-     * Error handling helper
-     */
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Error");
@@ -474,14 +386,6 @@ public class MapController implements Initializable {
         alert.showAndWait();
     }
 
-    // =========================================================
-    //  AÑADIR UN POI (texto) AL MAPA
-    // =========================================================
-
-    /**
-     * @param x coordenada X del clic en el sistema local del mapPane
-     * @param y coordenada Y del clic en el sistema local del mapPane
-     */
     private void addPoi(double x, double y) {
 
         Dialog<Poi> poiDialog = new Dialog<>();
@@ -522,14 +426,6 @@ public class MapController implements Initializable {
         }
     }
 
-    // =========================================================
-    //  CAMBIAR EL MAPA (selector de fichero)
-    // =========================================================
-
-    /**
-     * @param event evento de acción del menú
-     * @throws IOException si hay un problema al obtener la ruta canónica
-     */
     @FXML
     private void changeMap(ActionEvent event) throws IOException {
         FileChooser fc = new FileChooser();
@@ -544,18 +440,28 @@ public class MapController implements Initializable {
         }
     }
 
-    // =========================================================
-    //  AÑADIR UN CÍRCULO AL MAPA
-    // =========================================================
-
-    /**
-     * @param x coordenada X en el sistema local del mapPane
-     * @param y coordenada Y en el sistema local del mapPane
-     */
     private void addCircle(double x, double y) {
         Circle circle = new Circle(10, Color.RED); // radio = 10 px, color = rojo
         circle.setCenterX(x);
         circle.setCenterY(y);
         mapPane.getChildren().add(circle); // Se añade sobre el mapa como cualquier nodo
+    }
+
+    private void switchSceneMenu(ActionEvent event, Parent root, String title, boolean wait) {
+        if (wait) {
+            Stage stage = new Stage();
+            stage.setTitle(title);
+            stage.setScene(new Scene(root));
+            stage.initModality(Modality.APPLICATION_MODAL);
+            Stage mainStage = (Stage) map_scrollpane.getScene().getWindow();
+            stage.initOwner(mainStage);
+            stage.showAndWait();
+
+        } else {
+            Stage stage = (Stage) map_scrollpane.getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.setTitle(title);
+            stage.show();
+        }
     }
 }
