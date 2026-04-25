@@ -3,6 +3,7 @@ package controllerFiles;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -11,16 +12,14 @@ import application.Poi;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
+import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
-import javafx.scene.Group;
-import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
+import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -31,6 +30,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.Line;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
@@ -57,6 +57,10 @@ public class MapController implements Initializable {
     private MapProjection projection;
     private MapRegion currentRegion;
     private Activity currentActivity = null;
+    private GeoPoint firstPoint = null; // Stores the start/center
+    private AnnotationType pendingType = null; // Stores what we are drawing
+    private String pendingText = "";
+    private String pendingColor = "#FF0000";
 
 
     @Override
@@ -214,6 +218,14 @@ public class MapController implements Initializable {
 
     // Auxiliary methods
 
+    private void showInformation(String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Next Step");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.show();
+    }
+
     private Image buildMap(File imgFile) {
         if (!imgFile.exists()) {
             map_scrollpane.setContent(new Label("Image not found: " + imgFile.getAbsolutePath()));
@@ -237,10 +249,17 @@ public class MapController implements Initializable {
         mapPane.setOnMouseClicked(e -> {
             if (e.getButton() == MouseButton.SECONDARY) {
                 onMapRightClick(e.getX(), e.getY());
-            } else if (e.getButton() == MouseButton.PRIMARY && insertionMode) {
-                insertionMode = false;
-                mapPane.setStyle("");
-                addPoi(e.getX(), e.getY());
+            }
+            else if (e.getButton() == MouseButton.PRIMARY) {
+
+                if (firstPoint != null) {
+                    complexAnnotation(e.getX(), e.getY());
+                }
+                else if (insertionMode) {
+                    insertionMode = false;
+                    mapPane.setStyle("");
+                    addPoi(e.getX(), e.getY());
+                }
             }
         });
 
@@ -267,48 +286,70 @@ public class MapController implements Initializable {
 
         Dialog<Annotation> dialog = new Dialog<>();
         dialog.setTitle("Add Annotation");
-        dialog.setHeaderText("Create a new point annotation");
+        dialog.setHeaderText("Create a new map annotation");
 
+        TextField textDescription = new TextField();
+        ColorPicker picker = new ColorPicker(Color.RED);
+        ComboBox<AnnotationType> typeCombo = new ComboBox<>(FXCollections.observableArrayList(AnnotationType.values()));
+        typeCombo.setValue(AnnotationType.POINT);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10); grid.setVgap(10);
+        grid.setPadding(new Insets(20));
+        grid.add(new Label("Type:"), 0, 0);
+        grid.add(typeCombo, 1, 0);
+        grid.add(new Label("Description:"), 0, 1);
+        grid.add(textDescription, 1, 1);
+        grid.add(new Label("Color:"), 0, 2);
+        grid.add(picker, 1, 2);
+
+        dialog.getDialogPane().setContent(grid);
         ButtonType saveButtonType = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
 
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.setPadding(new Insets(20, 150, 10, 10));
-
-        TextField textDescription = new TextField();
-        textDescription.setPromptText("e.g., Dangerous crossing");
-
-        ColorPicker picker = new ColorPicker(Color.RED);
-
-        grid.add(new Label("Description:"), 0, 0);
-        grid.add(textDescription, 1, 0);
-        grid.add(new Label("Color:"), 0, 1);
-        grid.add(picker, 1, 1);
-
-        dialog.getDialogPane().setContent(grid);
-
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == saveButtonType) {
-                String hexColor = toHex(picker.getValue());
-                return new Annotation(
-                        AnnotationType.POINT,
-                        textDescription.getText(),
-                        hexColor,
-                        2.0,
-                        List.of(geoPoint)
-                );
+                AnnotationType type = typeCombo.getValue();
+
+                // POINT and TEXT only need one click. We can save them NOW.
+                if (type == AnnotationType.POINT || type == AnnotationType.TEXT) {
+                    return new Annotation(type, textDescription.getText(), toHex(picker.getValue()), 2.0, List.of(geoPoint));
+                } else {
+                    this.firstPoint = geoPoint;
+                    this.pendingType = type;
+                    this.pendingText = textDescription.getText();
+                    this.pendingColor = toHex(picker.getValue());
+
+                    mapPane.setCursor(Cursor.CROSSHAIR);
+                    showInformation("Click anywhere on the map to set the " + (type == AnnotationType.LINE ? "end point" : "radius"));
+                    return null;
+                }
             }
             return null;
         });
 
         dialog.showAndWait().ifPresent(ann -> {
             Annotation saved = app.addAnnotation(currentActivity, ann);
-            if (saved != null) {
-                displayAnnotation(saved);
-            }
+            if (saved != null) displayAnnotation(saved);
         });
+    }
+
+    private void complexAnnotation(double x, double y) {
+        GeoPoint secondPoint = projection.unproject(x, y);
+        Annotation complexAnn = new Annotation(
+                pendingType,
+                pendingText,
+                pendingColor,
+                3.0,
+                List.of(firstPoint, secondPoint)
+        );
+        Annotation saved = app.addAnnotation(currentActivity, complexAnn);
+        if (saved != null) {
+            displayAnnotation(saved);
+        }
+        firstPoint = null;
+        pendingType = null;
+        mapPane.setCursor(Cursor.DEFAULT);
     }
 
     private String toHex(Color c) {
@@ -319,22 +360,60 @@ public class MapController implements Initializable {
     }
 
     private void displayAnnotation(Annotation ann) {
-        GeoPoint gp = ann.getGeoPoints().get(0);
-        Point2D pix = projection.project(gp);
+        List<GeoPoint> gps = ann.getGeoPoints();
+        if (gps.isEmpty() || projection == null) return;
 
-        if (ann.getType() == AnnotationType.POINT) {
-            Circle marker = new Circle(pix.getX(), pix.getY(), 6);
-            marker.setFill(Color.web(ann.getColor()));
-            marker.setStroke(Color.WHITE);
-            marker.setStrokeWidth(ann.getStrokeWidth());
+        Color annotationColor = Color.web(ann.getColor());
+        Point2D p1 = projection.project(gps.get(0));
 
-            Label label = new Label(ann.getText());
-            label.setLayoutX(pix.getX() + 10);
-            label.setLayoutY(pix.getY() - 10);
-            label.setStyle("-fx-background-color: rgba(255, 255, 255, 0.7); -fx-padding: 2;");
+        switch (ann.getType()) {
+            case POINT:
+                Circle dot = new Circle(p1.getX(), p1.getY(), 5, annotationColor);
+                dot.setStroke(Color.WHITE);
+                mapPane.getChildren().add(dot);
+                addLabel(p1, ann);
+                break;
 
-            mapPane.getChildren().addAll(marker, label);
+            case TEXT:
+                addLabel(p1, ann);
+                break;
+
+            case LINE:
+                if (gps.size() >= 2) {
+                    Point2D p2 = projection.project(gps.get(1));
+                    Line line = new Line(p1.getX(), p1.getY(), p2.getX(), p2.getY());
+                    line.setStroke(annotationColor);
+                    line.setStrokeWidth(ann.getStrokeWidth());
+                    mapPane.getChildren().add(line);
+                }
+                break;
+
+            case CIRCLE:
+                if (gps.size() >= 2) {
+                    Point2D edge = projection.project(gps.get(1));
+                    double pixelRadius = p1.distance(edge);
+
+                    Circle circle = new Circle(p1.getX(), p1.getY(), pixelRadius);
+                    circle.setStroke(annotationColor);
+                    circle.setStrokeWidth(ann.getStrokeWidth());
+                    circle.setFill(annotationColor.deriveColor(0, 1, 1, 0.3));
+
+                    mapPane.getChildren().add(circle);
+                }
+                break;
         }
+    }
+
+    private void addLabel(Point2D pos, Annotation ann) {
+        if (ann.getText() == null || ann.getText().isEmpty()) return;
+        Label label = new Label(ann.getText());
+        label.setTextFill(Color.web(ann.getColor()));
+        label.setLayoutX(pos.getX() + 10);
+        label.setLayoutY(pos.getY() - 10);
+        label.setStyle("-fx-background-color: rgba(255, 255, 255, 0.8); " +
+                "-fx-font-weight: bold; -fx-padding: 3; -fx-background-radius: 3;");
+
+        mapPane.getChildren().add(label);
     }
 
     private void drawRoute(Activity activity) {
@@ -359,18 +438,6 @@ public class MapController implements Initializable {
         endMarker.setStroke(Color.BLACK);
 
         mapPane.getChildren().addAll(routeLine, startMarker, endMarker);
-    }
-
-    private Point2D geoToPixel(double lat, double lon) {
-        double topLat = 39.485;
-        double bottomLat = 39.475;
-        double leftLon = -0.345;
-        double rightLon = -0.330;
-
-        double x = mapPane.getWidth() * (lon - leftLon) / (rightLon - leftLon);
-        double y = mapPane.getHeight() * (topLat - lat) / (topLat - bottomLat);
-
-        return new Point2D(x, y);
     }
 
     private void showError(String message) {
@@ -433,13 +500,6 @@ public class MapController implements Initializable {
             buildMap(imgFile);
             map_listview.getItems().clear();
         }
-    }
-
-    private void addCircle(double x, double y) {
-        Circle circle = new Circle(10, Color.RED); // radio = 10 px, color = rojo
-        circle.setCenterX(x);
-        circle.setCenterY(y);
-        mapPane.getChildren().add(circle); // Se añade sobre el mapa como cualquier nodo
     }
 
     private void switchSceneMenu(ActionEvent event, Parent root, String title, boolean wait) {
