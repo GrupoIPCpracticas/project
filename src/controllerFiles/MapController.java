@@ -199,12 +199,12 @@ public class MapController implements Initializable {
             try {
                 currentActivity = app.importActivity(file);
                 if (currentActivity != null) {
-                    statsButton.setDisable(false);
                     currentRegion = currentActivity.getSuggestedMap();
                     File mapImageFile = new File(currentRegion.getImagePath());
-                    buildMap(mapImageFile);
-                    this.projection = new MapProjection(currentRegion, mapPane.getWidth(), mapPane.getHeight());
+                    Image img = buildMap(mapImageFile);
+                    this.projection = new MapProjection(currentRegion, img.getWidth(), img.getHeight());
                     drawRoute(currentActivity);
+                    if (statsButton != null) statsButton.setDisable(false);
                 }
             } catch (Exception e) {
                 showError("Error processing GPX: " + e.getMessage());
@@ -214,10 +214,10 @@ public class MapController implements Initializable {
 
     // Auxiliary methods
 
-    private void buildMap(File imgFile) {
+    private Image buildMap(File imgFile) {
         if (!imgFile.exists()) {
             map_scrollpane.setContent(new Label("Image not found: " + imgFile.getAbsolutePath()));
-            return;
+            return null;
         }
 
         Image img = new Image(imgFile.toURI().toString());
@@ -231,11 +231,9 @@ public class MapController implements Initializable {
         background.setFitHeight(h);
         background.setPreserveRatio(true);
         mapPane.getChildren().add(background);
-
         mapPane.setPrefSize(w, h);
         mapPane.setMinSize(w, h);
         mapPane.setMaxSize(w, h);
-
         mapPane.setOnMouseClicked(e -> {
             if (e.getButton() == MouseButton.SECONDARY) {
                 onMapRightClick(e.getX(), e.getY());
@@ -258,6 +256,8 @@ public class MapController implements Initializable {
         double zoomLevel = zoom_slider.getValue();
         zoomGroup.setScaleX(zoomLevel);
         zoomGroup.setScaleY(zoomLevel);
+
+        return img;
     }
 
     private void onMapRightClick(double x, double y) {
@@ -311,6 +311,13 @@ public class MapController implements Initializable {
         });
     }
 
+    private String toHex(Color c) {
+        return String.format("#%02X%02X%02X",
+                (int)(c.getRed() * 255),
+                (int)(c.getGreen() * 255),
+                (int)(c.getBlue() * 255));
+    }
+
     private void displayAnnotation(Annotation ann) {
         GeoPoint gp = ann.getGeoPoints().get(0);
         Point2D pix = projection.project(gp);
@@ -328,42 +335,30 @@ public class MapController implements Initializable {
 
             mapPane.getChildren().addAll(marker, label);
         }
-        // Add logic here for LINE (Polyline) or CIRCLE (Circle with radius)
     }
-
-    private String toHex(Color c) {
-        return String.format("#%02X%02X%02X",
-                (int)(c.getRed() * 255),
-                (int)(c.getGreen() * 255),
-                (int)(c.getBlue() * 255));
-    }
-
 
     private void drawRoute(Activity activity) {
         List<TrackPoint> points = activity.getTrackPoints();
         if (points == null || points.isEmpty()) return;
 
-        Polyline route = new Polyline();
-        route.setStroke(Color.BLUE);
-        route.setStrokeWidth(3);
-        route.setMouseTransparent(true);
+        Polyline routeLine = new Polyline();
+        routeLine.setStroke(Color.BLUE);
+        routeLine.setStrokeWidth(3);
+        routeLine.getStrokeDashArray().addAll(5.0, 5.0);
 
-        List<Point2D> pixelPoints = projection.projectActivity(activity);
-
-        for (Point2D p : pixelPoints) {
-            route.getPoints().addAll(p.getX(), p.getY());
+        for (TrackPoint tp : points) {
+            Point2D pixel = projection.project(tp);
+            routeLine.getPoints().addAll(pixel.getX(), pixel.getY());
         }
+        Point2D startPx = projection.project(activity.getStartPoint());
+        Circle startMarker = new Circle(startPx.getX(), startPx.getY(), 6, Color.LIMEGREEN);
+        startMarker.setStroke(Color.BLACK);
 
-        TrackPoint start = activity.getStartPoint();
-        Point2D startPx = projection.project(start);
-        Circle startMarker = new Circle(startPx.getX(), startPx.getY(), 7, Color.GREEN);
-        startMarker.setStroke(Color.WHITE);
-        TrackPoint end = activity.getEndPoint();
-        Point2D endPx = projection.project(end);
-        Circle endMarker = new Circle(endPx.getX(), endPx.getY(), 7, Color.RED);
-        endMarker.setStroke(Color.WHITE);
+        Point2D endPx = projection.project(activity.getEndPoint());
+        Circle endMarker = new Circle(endPx.getX(), endPx.getY(), 6, Color.RED);
+        endMarker.setStroke(Color.BLACK);
 
-        mapPane.getChildren().addAll(route, startMarker, endMarker);
+        mapPane.getChildren().addAll(routeLine, startMarker, endMarker);
     }
 
     private Point2D geoToPixel(double lat, double lon) {
@@ -429,14 +424,14 @@ public class MapController implements Initializable {
     @FXML
     private void changeMap(ActionEvent event) throws IOException {
         FileChooser fc = new FileChooser();
-        fc.setInitialDirectory(new File(".")); // Empezamos en el directorio del proyecto
+        fc.setInitialDirectory(new File("."));
 
         File imgFile = fc.showOpenDialog(zoom_slider.getScene().getWindow());
 
         if (imgFile != null) {
             System.out.println("Mapa seleccionado: " + imgFile.getCanonicalPath());
-            buildMap(imgFile); // Reconstruimos la vista con la nueva imagen
-            map_listview.getItems().clear(); // Borramos los datos del mapa anterior
+            buildMap(imgFile);
+            map_listview.getItems().clear();
         }
     }
 
