@@ -61,6 +61,12 @@ public class MapController implements Initializable {
     private AnnotationType pendingType = null; // Stores what we are drawing
     private String pendingText = "";
     private String pendingColor = "#FF0000";
+    @FXML
+    private Label sessionStats;
+    @FXML
+    private SplitPane splitPane;
+    @FXML
+    private ImageView mapView;
 
 
     @Override
@@ -151,7 +157,6 @@ public class MapController implements Initializable {
         map_scrollpane.setVvalue(scrollV);
     }
 
-    @FXML
     void listClicked(MouseEvent event) {
 
     }
@@ -528,5 +533,11 @@ public class MapController implements Initializable {
             stage.setTitle(title);
             stage.show();
         }
+    }
+
+    @FXML
+    private void handleCumulative(ActionEvent event) throws IOException{
+        Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/CumulativeMonth.fxml"));
+        switchSceneMenu(event, root, "Monthly Stats", false);
     }
 }
