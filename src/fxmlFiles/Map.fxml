@@ -66,6 +66,7 @@
                         <MenuItem mnemonicParsing="false" onAction="#handleProfile" text="Edit Profile" />
                         <MenuItem mnemonicParsing="false" onAction="#handleSessions" text="Session History" />
                         <MenuItem mnemonicParsing="false" onAction="#handleLogout" text="Log Out" />
+                        <MenuItem mnemonicParsing="false" onAction="#handleCumulative" text="Cumulative Totals" />
                      </items>
                   </Menu>
                   <Menu mnemonicParsing="false" text="Maps">
@@ -77,7 +78,7 @@
                </menus>
             </MenuBar>
             <Region HBox.hgrow="ALWAYS" />
-            <Button fx:id="statsButton" onAction="#handleStats" mnemonicParsing="false" text="Show Statistics" />
+            <Button fx:id="statsButton" mnemonicParsing="false" onAction="#handleStats" text="Show Statistics" />
             <HBox alignment="CENTER" spacing="5.0" style="-fx-background-color: #f4f4f4; -fx-background-radius: 5;">
                <children>
                   <Label text="Zoom" />
