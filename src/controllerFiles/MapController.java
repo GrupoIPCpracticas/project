@@ -157,6 +157,7 @@ public class MapController implements Initializable {
         map_scrollpane.setVvalue(scrollV);
     }
 
+    @FXML
     void listClicked(MouseEvent event) {
 
     }
