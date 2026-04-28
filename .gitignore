@@ -16,3 +16,4 @@ sportactivity.db
 .DS_Store
 Thumbs.db
 /build/
+/dist/
