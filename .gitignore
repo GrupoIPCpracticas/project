@@ -4,6 +4,7 @@ IPCprojectlib/
 nbproject/
 out/
 sportactivity.db
+.gitignore
 
 # IDE and Editor
 .idea/
