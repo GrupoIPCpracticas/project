@@ -53,7 +53,7 @@ public class SessionHistoryController implements Initializable {
         List<Session> sessions = app.getSessionsByUser(app.getCurrentUser());
         ObservableList<Session> sessionData = FXCollections.observableArrayList(sessions);
         sessionTable.setItems(sessionData);
-
+        
         calculateTotals(sessions);
     }
 

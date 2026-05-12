@@ -26,6 +26,13 @@ public class MapApp extends Application {
         Scene scene = new Scene(root);
         stage.setTitle("Welcome");
         stage.setScene(scene);
+        
+        stage.setOnCloseRequest(event -> {
+        if (app.getCurrentUser() != null) {
+            app.logout();
+        }
+    });
+            
         stage.show();
     }
 
