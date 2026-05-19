@@ -41,25 +41,25 @@
                 <RowConstraints minHeight="65.0" vgrow="SOMETIMES" />
             </rowConstraints>
             <children>
-                <Label text="Total time:" textFill="#545454" GridPane.halignment="LEFT" GridPane.rowIndex="0">
+                <Label text="Total time:" textFill="#545454" GridPane.halignment="RIGHT" GridPane.rowIndex="0">
                     <font>
                         <Font name="System Bold" size="13.0" />
                     </font>
                 </Label>
 
-                <Label alignment="CENTER_RIGHT" text="Total distance:" textFill="#545454" GridPane.halignment="LEFT" GridPane.rowIndex="1">
+                <Label alignment="CENTER_RIGHT" text="Total distance:" textFill="#545454" GridPane.halignment="RIGHT" GridPane.rowIndex="1">
                     <font>
                         <Font name="System Bold" size="13.0" />
                     </font>
                 </Label>
 
-                <Label alignment="CENTER" text="Total ascent:" textFill="#545454" GridPane.halignment="LEFT" GridPane.rowIndex="2" GridPane.valignment="CENTER">
+                <Label alignment="CENTER" text="Total ascent:" textFill="#545454" GridPane.halignment="RIGHT" GridPane.rowIndex="2" GridPane.valignment="CENTER">
                     <font>
                         <Font name="System Bold" size="13.0" />
                     </font>
                 </Label>
 
-                <Label text="Total descent:" textFill="#545454" GridPane.halignment="LEFT" GridPane.rowIndex="3" GridPane.valignment="CENTER">
+                <Label text="Total descent:" textFill="#545454" GridPane.halignment="RIGHT" GridPane.rowIndex="3" GridPane.valignment="CENTER">
                     <font>
                         <Font name="System Bold" size="13.0" />
                     </font>

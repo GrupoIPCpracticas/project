@@ -84,6 +84,7 @@ public class MapController implements Initializable {
         zoom_slider.setValue(1.0); // valor inicial: 100 %
 
         refreshActivityList();
+        map_listview.getSelectionModel().clearSelection();
         zoom_slider.valueProperty().addListener(
                 (observable, oldVal, newVal) -> zoom((Double) newVal)
         );
@@ -237,6 +238,7 @@ public class MapController implements Initializable {
     private void refreshActivityList() {
         List<Activity> activities = app.getUserActivities();
         map_listview.getItems().setAll(activities);
+        map_listview.getSelectionModel().clearSelection();
     }
 
     private void loadActivityData(Activity activity) {

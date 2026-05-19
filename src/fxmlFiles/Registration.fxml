@@ -55,7 +55,7 @@
             <Label fx:id="dobErrorLabel" style="-fx-text-fill: red; -fx-font-size: 10px;" wrapText="true" />
         </VBox>
         <columnConstraints>
-            <ColumnConstraints hgrow="SOMETIMES" minWidth="100.0" />
+            <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" minWidth="100.0" />
             <ColumnConstraints hgrow="ALWAYS" minWidth="200.0" />
         </columnConstraints>
         <rowConstraints>
@@ -65,13 +65,13 @@
             <RowConstraints minHeight="50.0" />
         </rowConstraints>
     </GridPane>
-    <HBox alignment="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="100.0" prefWidth="200.0">
+    <HBox alignment="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="100.0" prefWidth="200.0" spacing="10.0">
         <children>
+            <Button alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#handleSelectImage" style="-fx-background-radius: 20;" text="Change Photo" />
             <ImageView fx:id="avatarView" fitHeight="120.0" fitWidth="120.0" pickOnBounds="true" preserveRatio="true" style="-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);">
                 <HBox.margin>
                     <Insets right="20.0" />
                 </HBox.margin></ImageView>
-            <Button alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#handleSelectImage" style="-fx-background-radius: 20;" text="Change Photo" />
         </children>
     </HBox>
     <HBox alignment="CENTER" prefHeight="60.0" prefWidth="400.0" spacing="20.0">
