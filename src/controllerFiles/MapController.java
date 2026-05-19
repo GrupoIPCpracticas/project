@@ -258,6 +258,9 @@ public class MapController implements Initializable {
             loadElevationChart(activity);
 
         }
+        
+    System.out.println("DEBUG viewed counter check - sesión activa usuario: " 
+        + app.getCurrentUser().getNickName());
     }
 
     private void showInformation(String message) {

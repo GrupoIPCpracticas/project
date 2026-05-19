@@ -39,14 +39,18 @@ public class RegistrationController implements Initializable {
     @FXML private Button registerButton;
     @FXML private ImageView avatarView;
     private String avatarPath;
+    private SportActivityApp app;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        nickField.textProperty().addListener((obs, oldV, newV) -> {
-            if (newV.isBlank()) nickErrorLabel.setText("");
+        app = SportActivityApp.getInstance();
+        
+       nickField.textProperty().addListener((obs, oldV, newV) -> {
+          if (newV.isBlank()) nickErrorLabel.setText("");
             else if (!User.checkNickName(newV)) nickErrorLabel.setText("6-15 chars, letters/digits only.");
+            else if (app.nickNameExists(newV)) nickErrorLabel.setText("Nickname already in use.");
             else nickErrorLabel.setText("");
-        });
+          });
 
         emailField.textProperty().addListener((obs, oldV, newV) -> {
             if (newV.isBlank()) emailErrorLabel.setText("");
@@ -79,6 +83,7 @@ public class RegistrationController implements Initializable {
 
         BooleanBinding isInvalid = Bindings.createBooleanBinding(
                 () -> !User.checkNickName(nickField.getText()) ||
+                         app.nickNameExists(nickField.getText()) ||
                         !User.checkEmail(emailField.getText()) ||
                         !User.checkPassword(passField.getText()) ||
                         dobPicker.getValue() == null ||
@@ -99,8 +104,6 @@ public class RegistrationController implements Initializable {
         String email = emailField.getText();
         String pass = passField.getText();
         LocalDate dob = dobPicker.getValue();
-
-        SportActivityApp app = SportActivityApp.getInstance();
 
         boolean registered = app.registerUser(nick, email, pass, dob, avatarPath);
         if(registered) {
