@@ -41,6 +41,8 @@ import javafx.scene.shape.Polyline;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
+import javafx.scene.shape.StrokeLineCap;
+import javafx.scene.layout.HBox;
 
 public class MapController implements Initializable {
 
@@ -223,7 +225,7 @@ public class MapController implements Initializable {
                     File mapImageFile = new File(currentRegion.getImagePath());
                     Image img = buildMap(mapImageFile);
                     this.projection = new MapProjection(currentRegion, img.getWidth(), img.getHeight());
-                    drawRoute(currentActivity);
+                    drawRouteColoredBySpeed(currentActivity);
                     loadElevationChart(currentActivity);
                     if (statsButton != null) statsButton.setDisable(false);
                 }
@@ -253,7 +255,7 @@ public class MapController implements Initializable {
 
         if (mapImage != null) {
             this.projection = new MapProjection(currentRegion, mapImage.getWidth(), mapImage.getHeight());
-            drawRoute(activity);
+            drawRouteColoredBySpeed(activity);
             for (Annotation ann : activity.getAnnotations()) {
                 displayAnnotation(ann);
             }
@@ -431,6 +433,7 @@ public class MapController implements Initializable {
                     line.setStroke(annotationColor);
                     line.setStrokeWidth(ann.getStrokeWidth());
                     mapPane.getChildren().add(line);
+                }
                 break;
 
             case CIRCLE:
@@ -627,5 +630,88 @@ public class MapController implements Initializable {
         }
         // end of AI code
     }
+
+    // AI code
+    private void drawRouteColoredBySpeed(Activity activity) {
+        List<TrackPoint> points = activity.getTrackPoints();
+        if (points == null || points.size() < 2) return;
+        
+        removeSpeedLegend();
+        
+        for (int i = 0; i < points.size() - 1; i++) {
+            TrackPoint current = points.get(i);
+            TrackPoint next = points.get(i + 1);
+            
+            double speedKmph = current.speedTo(next);
+            Color segmentColor = getColorForSpeedFixed(speedKmph);
+            
+            Point2D p1 = projection.project(current);
+            Point2D p2 = projection.project(next);
+            
+            Line segment = new Line(p1.getX(), p1.getY(), p2.getX(), p2.getY());
+            segment.setStroke(segmentColor);
+            segment.setStrokeWidth(4);
+            segment.setStrokeLineCap(StrokeLineCap.ROUND);
+            
+            mapPane.getChildren().add(segment);
+        }
+        
+        addStartEndMarkers(activity);
+        addSpeedLegend();
+    }
+    
+    private Color getColorForSpeedFixed(double speedKmph) {
+        if (speedKmph > 15) return Color.RED;
+        if (speedKmph > 10) return Color.ORANGE;
+        if (speedKmph > 6) return Color.YELLOW;
+        if (speedKmph > 0) return Color.GREEN;
+        return Color.GRAY;
+    }
+    
+    private void addStartEndMarkers(Activity activity) {
+        Point2D startPx = projection.project(activity.getStartPoint());
+        Circle startMarker = new Circle(startPx.getX(), startPx.getY(), 7, Color.LIMEGREEN);
+        startMarker.setStroke(Color.BLACK);
+        startMarker.setStrokeWidth(1.5);
+        
+        Point2D endPx = projection.project(activity.getEndPoint());
+        Circle endMarker = new Circle(endPx.getX(), endPx.getY(), 7, Color.RED);
+        endMarker.setStroke(Color.BLACK);
+        endMarker.setStrokeWidth(1.5);
+        
+        mapPane.getChildren().addAll(startMarker, endMarker);
+    }
+    
+    private void addSpeedLegend() {
+        VBox legend = new VBox(5);
+        legend.setStyle("-fx-background-color: white; -fx-background-radius: 5; -fx-padding: 10; -fx-border-color: gray; -fx-border-radius: 5;");
+        legend.setLayoutX(10);
+        legend.setLayoutY(10);
+        legend.setUserData("speedLegend");
+        
+        legend.getChildren().add(new Label("🏃 Speed"));
+        legend.getChildren().add(createLegendItem(Color.RED, ">15 km/h"));
+        legend.getChildren().add(createLegendItem(Color.ORANGE, "10-15 km/h"));
+        legend.getChildren().add(createLegendItem(Color.YELLOW, "6-10 km/h"));
+        legend.getChildren().add(createLegendItem(Color.GREEN, "0-6 km/h"));
+        
+        mapPane.getChildren().add(legend);
+    }
+    
+    private void removeSpeedLegend() {
+        mapPane.getChildren().removeIf(node -> {
+            Object data = node.getUserData();
+            return data != null && "speedLegend".equals(data);
+        });
+    }
+    
+    private HBox createLegendItem(Color color, String text) {
+        Circle circle = new Circle(8, color);
+        circle.setStroke(Color.BLACK);
+        Label label = new Label(text);
+        HBox hbox = new HBox(10, circle, label);
+        return hbox;
+    }
+    // end of AI code
     
 }
