@@ -406,63 +406,73 @@ public class MapController implements Initializable {
                 (int)(c.getGreen() * 255),
                 (int)(c.getBlue() * 255));
     }
-
+    // AI code
     private void displayAnnotation(Annotation ann) {
-        List<GeoPoint> gps = ann.getGeoPoints();
-        if (gps.isEmpty() || projection == null) return;
+    List<GeoPoint> gps = ann.getGeoPoints();
+    if (gps.isEmpty() || projection == null) return;
 
-        Color annotationColor = Color.web(ann.getColor());
-        Point2D p1 = projection.project(gps.get(0));
+    Color annotationColor = Color.web(ann.getColor());
+    Point2D p1 = projection.project(gps.get(0));
 
-        switch (ann.getType()) {
-            case POINT:
-                Circle dot = new Circle(p1.getX(), p1.getY(), 5, annotationColor);
-                dot.setStroke(Color.WHITE);
-                mapPane.getChildren().add(dot);
-                addLabel(p1, ann);
-                break;
+    switch (ann.getType()) {
+        case POINT:
+            Circle dot = new Circle(p1.getX(), p1.getY(), 5, annotationColor);
+            dot.setStroke(Color.WHITE);
+            mapPane.getChildren().add(dot);
+            break;
 
-            case TEXT:
-                addLabel(p1, ann);
-                break;
-            // AI code
-            case LINE:
-                if (gps.size() >= 2) {
-                    Point2D p2 = projection.project(gps.get(1));
-                    Line line = new Line(p1.getX(), p1.getY(), p2.getX(), p2.getY());
-                    line.setStroke(annotationColor);
-                    line.setStrokeWidth(ann.getStrokeWidth());
-                    mapPane.getChildren().add(line);
-                }
-                break;
+        case TEXT:
+            break;
 
-            case CIRCLE:
-                if (gps.size() >= 2) {
-                    Point2D edge = projection.project(gps.get(1));
-                    double pixelRadius = p1.distance(edge);
+        case LINE:
+            if (gps.size() >= 2) {
+                Point2D p2 = projection.project(gps.get(1));
+                Line line = new Line(p1.getX(), p1.getY(), p2.getX(), p2.getY());
+                line.setStroke(annotationColor);
+                line.setStrokeWidth(ann.getStrokeWidth());
+                mapPane.getChildren().add(line);
+            }
+            break;
 
-                    Circle circle = new Circle(p1.getX(), p1.getY(), pixelRadius);
-                    circle.setStroke(annotationColor);
-                    circle.setStrokeWidth(ann.getStrokeWidth());
-                    circle.setFill(annotationColor.deriveColor(0, 1, 1, 0.3));
+        case CIRCLE:
+            if (gps.size() >= 2) {
+                Point2D edge = projection.project(gps.get(1));
+                double pixelRadius = p1.distance(edge);
+                if (pixelRadius > 500) pixelRadius = 50;
+                Circle circle = new Circle(p1.getX(), p1.getY(), pixelRadius);
+                circle.setStroke(annotationColor);
+                circle.setStrokeWidth(ann.getStrokeWidth());
+                circle.setFill(annotationColor.deriveColor(0, 1, 1, 0.3));
+                mapPane.getChildren().add(circle);
+            }
+            break;
 
-                    mapPane.getChildren().add(circle);
-                }
-                break;
-        }
+        default:
+            break;
     }
-
+    
+    addLabel(p1, ann);
+    }
+    
     private void addLabel(Point2D pos, Annotation ann) {
-        if (ann.getText() == null || ann.getText().isEmpty()) return;
-        Label label = new Label(ann.getText());
-        label.setTextFill(Color.web(ann.getColor()));
-        label.setLayoutX(pos.getX() + 10);
-        label.setLayoutY(pos.getY() - 10);
-        label.setStyle("-fx-background-color: rgba(255, 255, 255, 0.8); " +
-                "-fx-font-weight: bold; -fx-padding: 3; -fx-background-radius: 3;");
-
-        mapPane.getChildren().add(label);
+    if (ann.getText() == null || ann.getText().isEmpty()) return;
+    
+    Label label = new Label(ann.getText());
+    label.setTextFill(Color.web(ann.getColor()));
+    label.setStyle("-fx-background-color: rgba(255, 255, 255, 0.9); " +
+                   "-fx-font-weight: bold; " +
+                   "-fx-padding: 4 8 4 8; " +
+                   "-fx-background-radius: 5; " +
+                   "-fx-border-color: " + ann.getColor() + "; " +
+                   "-fx-border-radius: 5; " +
+                   "-fx-border-width: 1;");
+    
+    label.setLayoutX(pos.getX() + 10);
+    label.setLayoutY(pos.getY() - 15);
+    
+    mapPane.getChildren().add(label);
     }
+    // end of AI code
 
     private void drawRoute(Activity activity) {
         List<TrackPoint> points = activity.getTrackPoints();
