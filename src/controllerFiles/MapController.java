@@ -352,6 +352,7 @@ public class MapController implements Initializable {
         ButtonType saveButtonType = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
 
+        // AI code
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == saveButtonType) {
                 AnnotationType type = typeCombo.getValue();
@@ -371,6 +372,7 @@ public class MapController implements Initializable {
             }
             return null;
         });
+        // end of AI code
 
         dialog.showAndWait().ifPresent(ann -> {
             Annotation saved = app.addAnnotation(currentActivity, ann);
@@ -421,7 +423,7 @@ public class MapController implements Initializable {
             case TEXT:
                 addLabel(p1, ann);
                 break;
-
+            // AI code
             case LINE:
                 if (gps.size() >= 2) {
                     Point2D p2 = projection.project(gps.get(1));
@@ -429,7 +431,6 @@ public class MapController implements Initializable {
                     line.setStroke(annotationColor);
                     line.setStrokeWidth(ann.getStrokeWidth());
                     mapPane.getChildren().add(line);
-                }
                 break;
 
             case CIRCLE:
@@ -554,75 +555,77 @@ public class MapController implements Initializable {
     }
     
     private void loadElevationChart(Activity activity) {
-    List<TrackPoint> points = activity.getTrackPoints();
-    if (points == null || points.isEmpty()) return;
+        List<TrackPoint> points = activity.getTrackPoints();
+        if (points == null || points.isEmpty()) return;
 
-    NumberAxis xAxis = new NumberAxis();
-    NumberAxis yAxis = new NumberAxis();
-    xAxis.setLabel("Distance (km)");
-    yAxis.setLabel("Altitude (m)");
+        NumberAxis xAxis = new NumberAxis();
+        NumberAxis yAxis = new NumberAxis();
+        xAxis.setLabel("Distance (km)");
+        yAxis.setLabel("Altitude (m)");
 
-    elevationChart = new LineChart<>(xAxis, yAxis);
-    elevationChart.setTitle("Elevation graph");
-    elevationChart.setLegendVisible(false);
-    elevationChart.setCreateSymbols(false);
-    elevationChart.setPrefWidth(280);
-    elevationChart.setAnimated(false);
-    
-    XYChart.Series<Number, Number> series = new XYChart.Series<>();
-    double accDist = 0;
-    for (int i = 0; i < points.size(); i++) {
-        if (i > 0) accDist += points.get(i).distanceTo(points.get(i - 1));
-        series.getData().add(new XYChart.Data<>(accDist / 1000.0, points.get(i).getElevation()));
+        elevationChart = new LineChart<>(xAxis, yAxis);
+        elevationChart.setTitle("Elevation graph");
+        elevationChart.setLegendVisible(false);
+        elevationChart.setCreateSymbols(false);
+        elevationChart.setPrefWidth(280);
+        elevationChart.setAnimated(false);
+        
+        XYChart.Series<Number, Number> series = new XYChart.Series<>();
+        double accDist = 0;
+        for (int i = 0; i < points.size(); i++) {
+            if (i > 0) accDist += points.get(i).distanceTo(points.get(i - 1));
+            series.getData().add(new XYChart.Data<>(accDist / 1000.0, points.get(i).getElevation()));
+        }
+        elevationChart.getData().add(series);
+
+        // Añadir a la interfaz
+        if (!chartVisible) {
+            splitPane.getItems().add(elevationChart);
+            splitPane.setDividerPositions(0.22, 0.65);
+            chartVisible = true;
+        } else {
+            splitPane.getItems().set(2, elevationChart);
+        }
+
+        if (mapMarker == null) {
+            mapMarker = new Circle(7, Color.DODGERBLUE);
+            mapMarker.setStroke(Color.WHITE);
+            mapMarker.setStrokeWidth(2);
+            mapMarker.setVisible(false);
+            mapPane.getChildren().add(mapMarker);
+        } else {
+            mapMarker.setVisible(false);
+        }
+
+        setupChartMouseListener(points);
     }
-    elevationChart.getData().add(series);
-
-    // Añadir a la interfaz
-    if (!chartVisible) {
-        splitPane.getItems().add(elevationChart);
-        splitPane.setDividerPositions(0.22, 0.65);
-        chartVisible = true;
-    } else {
-        splitPane.getItems().set(2, elevationChart);
-    }
-
-    if (mapMarker == null) {
-        mapMarker = new Circle(7, Color.DODGERBLUE);
-        mapMarker.setStroke(Color.WHITE);
-        mapMarker.setStrokeWidth(2);
-        mapMarker.setVisible(false);
-        mapPane.getChildren().add(mapMarker);
-    } else {
-        mapMarker.setVisible(false);
-    }
-
-    setupChartMouseListener(points);
-}
     
     private void setupChartMouseListener(List<TrackPoint> points) {
-    for (XYChart.Data<Number, Number> data : elevationChart.getData().get(0).getData()) {
-        data.nodeProperty().addListener((obs, oldNode, newNode) -> {
-            if (newNode != null) {
-                newNode.setOnMouseEntered(e -> {
-                    double km = data.getXValue().doubleValue();
-                    double accDist = 0;
-                    TrackPoint closest = points.get(0);
-                    for (int i = 1; i < points.size(); i++) {
-                        accDist += points.get(i).distanceTo(points.get(i - 1));
-                        if (accDist / 1000.0 >= km) {
-                            closest = points.get(i);
-                            break;
+        // AI code
+        for (XYChart.Data<Number, Number> data : elevationChart.getData().get(0).getData()) {
+            data.nodeProperty().addListener((obs, oldNode, newNode) -> {
+                if (newNode != null) {
+                    newNode.setOnMouseEntered(e -> {
+                        double km = data.getXValue().doubleValue();
+                        double accDist = 0;
+                        TrackPoint closest = points.get(0);
+                        for (int i = 1; i < points.size(); i++) {
+                            accDist += points.get(i).distanceTo(points.get(i - 1));
+                            if (accDist / 1000.0 >= km) {
+                                closest = points.get(i);
+                                break;
+                            }
                         }
-                    }
-                    Point2D p = projection.project(closest);
-                    mapMarker.setCenterX(p.getX());
-                    mapMarker.setCenterY(p.getY());
-                    mapMarker.setVisible(true);
-                });
-                newNode.setOnMouseExited(e -> mapMarker.setVisible(false));
-            }
-        });
+                        Point2D p = projection.project(closest);
+                        mapMarker.setCenterX(p.getX());
+                        mapMarker.setCenterY(p.getY());
+                        mapMarker.setVisible(true);
+                    });
+                    newNode.setOnMouseExited(e -> mapMarker.setVisible(false));
+                }
+            });
+        }
+        // end of AI code
     }
-}
     
 }
