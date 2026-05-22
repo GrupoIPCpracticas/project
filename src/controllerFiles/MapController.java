@@ -41,6 +41,8 @@ import javafx.scene.shape.Polyline;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
+import javafx.scene.shape.StrokeLineCap;
+import javafx.scene.layout.HBox;
 
 import static upv.ipc.sportlib.AnnotationType.CIRCLE;
 
@@ -406,7 +408,7 @@ public class MapController implements Initializable {
                 (int)(c.getGreen() * 255),
                 (int)(c.getBlue() * 255));
     }
-
+    // AI code
     private void displayAnnotation(Annotation ann) {
         List<GeoPoint> gps = ann.getGeoPoints();
         if (gps.isEmpty() || projection == null) return;
