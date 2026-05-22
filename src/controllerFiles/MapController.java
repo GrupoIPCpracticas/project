@@ -42,6 +42,8 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 
+import static upv.ipc.sportlib.AnnotationType.CIRCLE;
+
 public class MapController implements Initializable {
 
     private Group zoomGroup;
@@ -431,8 +433,8 @@ public class MapController implements Initializable {
                     line.setStroke(annotationColor);
                     line.setStrokeWidth(ann.getStrokeWidth());
                     mapPane.getChildren().add(line);
-                break;
-
+                    break;
+                }
             case CIRCLE:
                 if (gps.size() >= 2) {
                     Point2D edge = projection.project(gps.get(1));
@@ -449,183 +451,185 @@ public class MapController implements Initializable {
         }
     }
 
-    private void addLabel(Point2D pos, Annotation ann) {
-        if (ann.getText() == null || ann.getText().isEmpty()) return;
-        Label label = new Label(ann.getText());
-        label.setTextFill(Color.web(ann.getColor()));
-        label.setLayoutX(pos.getX() + 10);
-        label.setLayoutY(pos.getY() - 10);
-        label.setStyle("-fx-background-color: rgba(255, 255, 255, 0.8); " +
-                "-fx-font-weight: bold; -fx-padding: 3; -fx-background-radius: 3;");
 
-        mapPane.getChildren().add(label);
-    }
 
-    private void drawRoute(Activity activity) {
-        List<TrackPoint> points = activity.getTrackPoints();
-        if (points == null || points.isEmpty()) return;
 
-        Polyline routeLine = new Polyline();
-        routeLine.setStroke(Color.BLUE);
-        routeLine.setStrokeWidth(3);
-        routeLine.getStrokeDashArray().addAll(5.0, 5.0);
+        private void addLabel (Point2D pos, Annotation ann){
+            if (ann.getText() == null || ann.getText().isEmpty()) return;
+            Label label = new Label(ann.getText());
+            label.setTextFill(Color.web(ann.getColor()));
+            label.setLayoutX(pos.getX() + 10);
+            label.setLayoutY(pos.getY() - 10);
+            label.setStyle("-fx-background-color: rgba(255, 255, 255, 0.8); " +
+                    "-fx-font-weight: bold; -fx-padding: 3; -fx-background-radius: 3;");
 
-        for (TrackPoint tp : points) {
-            Point2D pixel = projection.project(tp);
-            routeLine.getPoints().addAll(pixel.getX(), pixel.getY());
-        }
-        Point2D startPx = projection.project(activity.getStartPoint());
-        Circle startMarker = new Circle(startPx.getX(), startPx.getY(), 6, Color.LIMEGREEN);
-        startMarker.setStroke(Color.BLACK);
-
-        Point2D endPx = projection.project(activity.getEndPoint());
-        Circle endMarker = new Circle(endPx.getX(), endPx.getY(), 6, Color.RED);
-        endMarker.setStroke(Color.BLACK);
-
-        mapPane.getChildren().addAll(routeLine, startMarker, endMarker);
-    }
-
-    private void showError(String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
-
-    private void addPoi(double x, double y) {
-        if (currentActivity == null || projection == null) {
-            showError("Please select or import an activity first.");
-            return;
+            mapPane.getChildren().add(label);
         }
 
-        Dialog<Annotation> poiDialog = new Dialog<>();
-        poiDialog.setTitle("New Point of Interest");
-        poiDialog.setHeaderText("Mark a location on the map");
-        ButtonType okButton = new ButtonType("Accept", ButtonBar.ButtonData.OK_DONE);
-        poiDialog.getDialogPane().getButtonTypes().addAll(okButton, ButtonType.CANCEL);
-        TextField nameField = new TextField();
-        nameField.setPromptText("Name of POI (e.g. Refreshment Point)");
-        VBox vbox = new VBox(10, new Label("Name:"), nameField);
-        poiDialog.getDialogPane().setContent(vbox);
-        GeoPoint geoPos = projection.unproject(x, y);
-        poiDialog.setResultConverter(dialogButton -> {
-            if (dialogButton == okButton) {
-                return new Annotation(
-                        AnnotationType.POINT,
-                        nameField.getText().trim(),
-                        "#3498db", // Nice blue color
-                        2.0,
-                        List.of(geoPos)
-                );
+        private void drawRoute (Activity activity){
+            List<TrackPoint> points = activity.getTrackPoints();
+            if (points == null || points.isEmpty()) return;
+
+            Polyline routeLine = new Polyline();
+            routeLine.setStroke(Color.BLUE);
+            routeLine.setStrokeWidth(3);
+            routeLine.getStrokeDashArray().addAll(5.0, 5.0);
+
+            for (TrackPoint tp : points) {
+                Point2D pixel = projection.project(tp);
+                routeLine.getPoints().addAll(pixel.getX(), pixel.getY());
             }
-            return null;
-        });
-        Optional<Annotation> result = poiDialog.showAndWait();
-        if (result.isPresent()) {
-            Annotation saved = app.addAnnotation(currentActivity, result.get());
-            if (saved != null) {
-                displayAnnotation(saved);
+            Point2D startPx = projection.project(activity.getStartPoint());
+            Circle startMarker = new Circle(startPx.getX(), startPx.getY(), 6, Color.LIMEGREEN);
+            startMarker.setStroke(Color.BLACK);
+
+            Point2D endPx = projection.project(activity.getEndPoint());
+            Circle endMarker = new Circle(endPx.getX(), endPx.getY(), 6, Color.RED);
+            endMarker.setStroke(Color.BLACK);
+
+            mapPane.getChildren().addAll(routeLine, startMarker, endMarker);
+        }
+
+        private void showError (String message){
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText(null);
+            alert.setContentText(message);
+            alert.showAndWait();
+        }
+
+        private void addPoi ( double x, double y){
+            if (currentActivity == null || projection == null) {
+                showError("Please select or import an activity first.");
+                return;
             }
-        }
-    }
 
-    private void switchSceneMenu(ActionEvent event, Parent root, String title, boolean wait) {
-        if (wait) {
-            Stage stage = new Stage();
-            stage.setTitle(title);
-            stage.setScene(new Scene(root));
-            stage.initModality(Modality.APPLICATION_MODAL);
-            Stage mainStage = (Stage) map_scrollpane.getScene().getWindow();
-            stage.initOwner(mainStage);
-            stage.showAndWait();
-
-        } else {
-            Stage stage = (Stage) map_scrollpane.getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.setTitle(title);
-            stage.show();
-        }
-    }
-
-    @FXML
-    private void handleCumulative(ActionEvent event) throws IOException{
-        Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/CumulativeMonth.fxml"));
-        switchSceneMenu(event, root, "Monthly Stats", false);
-    }
-    
-    private void loadElevationChart(Activity activity) {
-        List<TrackPoint> points = activity.getTrackPoints();
-        if (points == null || points.isEmpty()) return;
-
-        NumberAxis xAxis = new NumberAxis();
-        NumberAxis yAxis = new NumberAxis();
-        xAxis.setLabel("Distance (km)");
-        yAxis.setLabel("Altitude (m)");
-
-        elevationChart = new LineChart<>(xAxis, yAxis);
-        elevationChart.setTitle("Elevation graph");
-        elevationChart.setLegendVisible(false);
-        elevationChart.setCreateSymbols(false);
-        elevationChart.setPrefWidth(280);
-        elevationChart.setAnimated(false);
-        
-        XYChart.Series<Number, Number> series = new XYChart.Series<>();
-        double accDist = 0;
-        for (int i = 0; i < points.size(); i++) {
-            if (i > 0) accDist += points.get(i).distanceTo(points.get(i - 1));
-            series.getData().add(new XYChart.Data<>(accDist / 1000.0, points.get(i).getElevation()));
-        }
-        elevationChart.getData().add(series);
-
-        // Añadir a la interfaz
-        if (!chartVisible) {
-            splitPane.getItems().add(elevationChart);
-            splitPane.setDividerPositions(0.22, 0.65);
-            chartVisible = true;
-        } else {
-            splitPane.getItems().set(2, elevationChart);
-        }
-
-        if (mapMarker == null) {
-            mapMarker = new Circle(7, Color.DODGERBLUE);
-            mapMarker.setStroke(Color.WHITE);
-            mapMarker.setStrokeWidth(2);
-            mapMarker.setVisible(false);
-            mapPane.getChildren().add(mapMarker);
-        } else {
-            mapMarker.setVisible(false);
-        }
-
-        setupChartMouseListener(points);
-    }
-    
-    private void setupChartMouseListener(List<TrackPoint> points) {
-        // AI code
-        for (XYChart.Data<Number, Number> data : elevationChart.getData().get(0).getData()) {
-            data.nodeProperty().addListener((obs, oldNode, newNode) -> {
-                if (newNode != null) {
-                    newNode.setOnMouseEntered(e -> {
-                        double km = data.getXValue().doubleValue();
-                        double accDist = 0;
-                        TrackPoint closest = points.get(0);
-                        for (int i = 1; i < points.size(); i++) {
-                            accDist += points.get(i).distanceTo(points.get(i - 1));
-                            if (accDist / 1000.0 >= km) {
-                                closest = points.get(i);
-                                break;
-                            }
-                        }
-                        Point2D p = projection.project(closest);
-                        mapMarker.setCenterX(p.getX());
-                        mapMarker.setCenterY(p.getY());
-                        mapMarker.setVisible(true);
-                    });
-                    newNode.setOnMouseExited(e -> mapMarker.setVisible(false));
+            Dialog<Annotation> poiDialog = new Dialog<>();
+            poiDialog.setTitle("New Point of Interest");
+            poiDialog.setHeaderText("Mark a location on the map");
+            ButtonType okButton = new ButtonType("Accept", ButtonBar.ButtonData.OK_DONE);
+            poiDialog.getDialogPane().getButtonTypes().addAll(okButton, ButtonType.CANCEL);
+            TextField nameField = new TextField();
+            nameField.setPromptText("Name of POI (e.g. Refreshment Point)");
+            VBox vbox = new VBox(10, new Label("Name:"), nameField);
+            poiDialog.getDialogPane().setContent(vbox);
+            GeoPoint geoPos = projection.unproject(x, y);
+            poiDialog.setResultConverter(dialogButton -> {
+                if (dialogButton == okButton) {
+                    return new Annotation(
+                            AnnotationType.POINT,
+                            nameField.getText().trim(),
+                            "#3498db", // Nice blue color
+                            2.0,
+                            List.of(geoPos)
+                    );
                 }
+                return null;
             });
+            Optional<Annotation> result = poiDialog.showAndWait();
+            if (result.isPresent()) {
+                Annotation saved = app.addAnnotation(currentActivity, result.get());
+                if (saved != null) {
+                    displayAnnotation(saved);
+                }
+            }
         }
-        // end of AI code
-    }
-    
+
+        private void switchSceneMenu (ActionEvent event, Parent root, String title,boolean wait){
+            if (wait) {
+                Stage stage = new Stage();
+                stage.setTitle(title);
+                stage.setScene(new Scene(root));
+                stage.initModality(Modality.APPLICATION_MODAL);
+                Stage mainStage = (Stage) map_scrollpane.getScene().getWindow();
+                stage.initOwner(mainStage);
+                stage.showAndWait();
+
+            } else {
+                Stage stage = (Stage) map_scrollpane.getScene().getWindow();
+                stage.setScene(new Scene(root));
+                stage.setTitle(title);
+                stage.show();
+            }
+        }
+
+        @FXML
+        private void handleCumulative (ActionEvent event) throws IOException {
+            Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/CumulativeMonth.fxml"));
+            switchSceneMenu(event, root, "Monthly Stats", false);
+        }
+
+        private void loadElevationChart (Activity activity){
+            List<TrackPoint> points = activity.getTrackPoints();
+            if (points == null || points.isEmpty()) return;
+
+            NumberAxis xAxis = new NumberAxis();
+            NumberAxis yAxis = new NumberAxis();
+            xAxis.setLabel("Distance (km)");
+            yAxis.setLabel("Altitude (m)");
+
+            elevationChart = new LineChart<>(xAxis, yAxis);
+            elevationChart.setTitle("Elevation graph");
+            elevationChart.setLegendVisible(false);
+            elevationChart.setCreateSymbols(false);
+            elevationChart.setPrefWidth(280);
+            elevationChart.setAnimated(false);
+
+            XYChart.Series<Number, Number> series = new XYChart.Series<>();
+            double accDist = 0;
+            for (int i = 0; i < points.size(); i++) {
+                if (i > 0) accDist += points.get(i).distanceTo(points.get(i - 1));
+                series.getData().add(new XYChart.Data<>(accDist / 1000.0, points.get(i).getElevation()));
+            }
+            elevationChart.getData().add(series);
+
+            // Añadir a la interfaz
+            if (!chartVisible) {
+                splitPane.getItems().add(elevationChart);
+                splitPane.setDividerPositions(0.22, 0.65);
+                chartVisible = true;
+            } else {
+                splitPane.getItems().set(2, elevationChart);
+            }
+
+            if (mapMarker == null) {
+                mapMarker = new Circle(7, Color.DODGERBLUE);
+                mapMarker.setStroke(Color.WHITE);
+                mapMarker.setStrokeWidth(2);
+                mapMarker.setVisible(false);
+                mapPane.getChildren().add(mapMarker);
+            } else {
+                mapMarker.setVisible(false);
+            }
+
+            setupChartMouseListener(points);
+        }
+
+        private void setupChartMouseListener (List < TrackPoint > points) {
+            // AI code
+            for (XYChart.Data<Number, Number> data : elevationChart.getData().get(0).getData()) {
+                data.nodeProperty().addListener((obs, oldNode, newNode) -> {
+                    if (newNode != null) {
+                        newNode.setOnMouseEntered(e -> {
+                            double km = data.getXValue().doubleValue();
+                            double accDist = 0;
+                            TrackPoint closest = points.get(0);
+                            for (int i = 1; i < points.size(); i++) {
+                                accDist += points.get(i).distanceTo(points.get(i - 1));
+                                if (accDist / 1000.0 >= km) {
+                                    closest = points.get(i);
+                                    break;
+                                }
+                            }
+                            Point2D p = projection.project(closest);
+                            mapMarker.setCenterX(p.getX());
+                            mapMarker.setCenterY(p.getY());
+                            mapMarker.setVisible(true);
+                        });
+                        newNode.setOnMouseExited(e -> mapMarker.setVisible(false));
+                    }
+                });
+            }
+            // end of AI code
+        }
 }
