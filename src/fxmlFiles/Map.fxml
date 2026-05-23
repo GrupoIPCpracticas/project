@@ -68,13 +68,13 @@
                         <MenuItem mnemonicParsing="false" onAction="#handleProfile" text="Edit Profile" />
                         <MenuItem mnemonicParsing="false" onAction="#handleSessions" text="Session History" />
                         <MenuItem mnemonicParsing="false" onAction="#handleLogout" text="Log Out" />
+                        <MenuItem mnemonicParsing="false" onAction="#handleCumulative" text="Cumulative Totals" />
                      </items>
                   </Menu>
                   <Menu mnemonicParsing="false" text="Maps">
                      <items>
                         <MenuItem mnemonicParsing="false" onAction="#handleAddMapMenu" text="Add new map"/>
                         <MenuItem mnemonicParsing="false" onAction="#changeMap" text="Change Current Map"/>
-                        <MenuItem mnemonicParsing="false" onAction="#handleCumulative" text="Cumulative Totals" />
                      </items>
                   </Menu>
                </menus>
