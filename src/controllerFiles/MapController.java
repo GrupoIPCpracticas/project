@@ -9,11 +9,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
-import javax.swing.GroupLayout.Group;
-import javax.swing.text.html.ListView;
-
-import org.w3c.dom.Node;
-
 import application.Poi;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
