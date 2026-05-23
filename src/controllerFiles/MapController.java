@@ -2,11 +2,17 @@ package controllerFiles;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.classfile.Label;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
+
+import javax.swing.GroupLayout.Group;
+import javax.swing.text.html.ListView;
+
+import org.w3c.dom.Node;
 
 import application.Poi;
 import javafx.animation.KeyFrame;
@@ -48,13 +54,18 @@ public class MapController implements Initializable {
 
     private Group zoomGroup;
 
-    @FXML private Pane mapPane;
-    @FXML private ListView<Activity> map_listview;
-    @FXML private ScrollPane map_scrollpane;
-    @FXML private Slider zoom_slider;
-    @FXML private Label mousePosition;
-    @FXML private Button statsButton;
-
+    @FXML
+    private Pane mapPane;
+    @FXML
+    private ListView<Activity> map_listview;
+    @FXML
+    private ScrollPane map_scrollpane;
+    @FXML
+    private Slider zoom_slider;
+    @FXML
+    private Label mousePosition;
+    @FXML
+    private Button statsButton;
 
     private ContextMenu mapContextMenu;
     private boolean insertionMode = false;
@@ -72,8 +83,9 @@ public class MapController implements Initializable {
     private SplitPane splitPane;
     @FXML
     private ImageView mapView;
-    
-    @FXML private LineChart<Number, Number> elevationChart;
+
+    @FXML
+    private LineChart<Number, Number> elevationChart;
     private Circle mapMarker;
     private boolean chartVisible = false;
 
@@ -81,17 +93,16 @@ public class MapController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         app = SportActivityApp.getInstance();
         statsButton.setDisable(true);
-        zoom_slider.setMin(0.5);   // zoom mínimo: 50 %
-        zoom_slider.setMax(1.5);   // zoom máximo: 150 %
+        zoom_slider.setMin(0.5); // zoom mínimo: 50 %
+        zoom_slider.setMax(1.5); // zoom máximo: 150 %
         zoom_slider.setValue(1.0); // valor inicial: 100 %
 
         refreshActivityList();
         map_listview.getSelectionModel().clearSelection();
         zoom_slider.valueProperty().addListener(
-                (observable, oldVal, newVal) -> zoom((Double) newVal)
-        );
+                (observable, oldVal, newVal) -> zoom((Double) newVal));
 
-        MenuItem miText   = new MenuItem("📝 Add Text");
+        MenuItem miText = new MenuItem("📝 Add Text");
         MenuItem miCircle = new MenuItem("⭕ Add Point");
         mapContextMenu = new ContextMenu(miText, miCircle);
 
@@ -139,8 +150,7 @@ public class MapController implements Initializable {
                 "sceneX: " + (int) event.getSceneX() +
                         ", sceneY: " + (int) event.getSceneY() + "\n" +
                         "         X: " + (int) event.getX() +
-                        ",          Y: " + (int) event.getY()
-        );
+                        ",          Y: " + (int) event.getY());
     }
 
     @FXML
@@ -172,7 +182,7 @@ public class MapController implements Initializable {
     }
 
     @FXML
-    private void handleStats(ActionEvent event) throws IOException{
+    private void handleStats(ActionEvent event) throws IOException {
         if (this.currentActivity == null) {
             showError("No activity loaded. Please import a GPX file first.");
             return;
@@ -196,13 +206,13 @@ public class MapController implements Initializable {
     }
 
     @FXML
-    private void handleProfile(ActionEvent event) throws IOException{
+    private void handleProfile(ActionEvent event) throws IOException {
         Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/EditProfile.fxml"));
         switchSceneMenu(event, root, "Edit Profile", false);
     }
 
     @FXML
-    private void handleSessions(ActionEvent event) throws IOException{
+    private void handleSessions(ActionEvent event) throws IOException {
         Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/SessionsHistory.fxml"));
         switchSceneMenu(event, root, "Sessions History", false);
     }
@@ -212,7 +222,7 @@ public class MapController implements Initializable {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select GPX File");
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("GPX Files", "*.gpx"));
-        File file = fileChooser.showOpenDialog(((Node)event.getSource()).getScene().getWindow());
+        File file = fileChooser.showOpenDialog(((Node) event.getSource()).getScene().getWindow());
 
         if (file != null) {
             try {
@@ -227,12 +237,20 @@ public class MapController implements Initializable {
                     this.projection = new MapProjection(currentRegion, img.getWidth(), img.getHeight());
                     drawRouteColoredBySpeed(currentActivity);
                     loadElevationChart(currentActivity);
-                    if (statsButton != null) statsButton.setDisable(false);
+                    if (statsButton != null)
+                        statsButton.setDisable(false);
                 }
             } catch (Exception e) {
                 showError("Error processing GPX: " + e.getMessage());
             }
         }
+    }
+
+    @FXML
+    private void handleAddMapMenu(ActionEvent event) throws IOException {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxmlFiles/AddMap.fxml"));
+        Parent root = loader.load();
+        switchSceneMenu(event, root, "Add New Map", false);
     }
 
     // Auxiliary method
@@ -262,7 +280,7 @@ public class MapController implements Initializable {
             loadElevationChart(activity);
 
         }
-        
+
     }
 
     private void showInformation(String message) {
@@ -296,13 +314,11 @@ public class MapController implements Initializable {
         mapPane.setOnMouseClicked(e -> {
             if (e.getButton() == MouseButton.SECONDARY) {
                 onMapRightClick(e.getX(), e.getY());
-            }
-            else if (e.getButton() == MouseButton.PRIMARY) {
+            } else if (e.getButton() == MouseButton.PRIMARY) {
 
                 if (firstPoint != null) {
                     complexAnnotation(e.getX(), e.getY());
-                }
-                else if (insertionMode) {
+                } else if (insertionMode) {
                     insertionMode = false;
                     mapPane.setStyle("");
                     addPoi(e.getX(), e.getY());
@@ -327,7 +343,8 @@ public class MapController implements Initializable {
     }
 
     private void onMapRightClick(double x, double y) {
-        if (currentActivity == null || projection == null) return;
+        if (currentActivity == null || projection == null)
+            return;
 
         GeoPoint geoPoint = projection.unproject(x, y);
 
@@ -341,7 +358,8 @@ public class MapController implements Initializable {
         typeCombo.setValue(AnnotationType.POINT);
 
         GridPane grid = new GridPane();
-        grid.setHgap(10); grid.setVgap(10);
+        grid.setHgap(10);
+        grid.setVgap(10);
         grid.setPadding(new Insets(20));
         grid.add(new Label("Type:"), 0, 0);
         grid.add(typeCombo, 1, 0);
@@ -360,7 +378,8 @@ public class MapController implements Initializable {
                 AnnotationType type = typeCombo.getValue();
 
                 if (type == AnnotationType.POINT || type == AnnotationType.TEXT) {
-                    return new Annotation(type, textDescription.getText(), toHex(picker.getValue()), 2.0, List.of(geoPoint));
+                    return new Annotation(type, textDescription.getText(), toHex(picker.getValue()), 2.0,
+                            List.of(geoPoint));
                 } else {
                     this.firstPoint = geoPoint;
                     this.pendingType = type;
@@ -368,7 +387,8 @@ public class MapController implements Initializable {
                     this.pendingColor = toHex(picker.getValue());
 
                     mapPane.setCursor(Cursor.CROSSHAIR);
-                    showInformation("Click anywhere on the map to set the " + (type == AnnotationType.LINE ? "end point" : "radius"));
+                    showInformation("Click anywhere on the map to set the "
+                            + (type == AnnotationType.LINE ? "end point" : "radius"));
                     return null;
                 }
             }
@@ -378,7 +398,8 @@ public class MapController implements Initializable {
 
         dialog.showAndWait().ifPresent(ann -> {
             Annotation saved = app.addAnnotation(currentActivity, ann);
-            if (saved != null) displayAnnotation(saved);
+            if (saved != null)
+                displayAnnotation(saved);
         });
     }
 
@@ -389,8 +410,7 @@ public class MapController implements Initializable {
                 pendingText,
                 pendingColor,
                 3.0,
-                List.of(firstPoint, secondPoint)
-        );
+                List.of(firstPoint, secondPoint));
         Annotation saved = app.addAnnotation(currentActivity, complexAnn);
         if (saved != null) {
             displayAnnotation(saved);
@@ -402,81 +422,86 @@ public class MapController implements Initializable {
 
     private String toHex(Color c) {
         return String.format("#%02X%02X%02X",
-                (int)(c.getRed() * 255),
-                (int)(c.getGreen() * 255),
-                (int)(c.getBlue() * 255));
+                (int) (c.getRed() * 255),
+                (int) (c.getGreen() * 255),
+                (int) (c.getBlue() * 255));
     }
+
     // AI code
     private void displayAnnotation(Annotation ann) {
-    List<GeoPoint> gps = ann.getGeoPoints();
-    if (gps.isEmpty() || projection == null) return;
+        List<GeoPoint> gps = ann.getGeoPoints();
+        if (gps.isEmpty() || projection == null)
+            return;
 
-    Color annotationColor = Color.web(ann.getColor());
-    Point2D p1 = projection.project(gps.get(0));
+        Color annotationColor = Color.web(ann.getColor());
+        Point2D p1 = projection.project(gps.get(0));
 
-    switch (ann.getType()) {
-        case POINT:
-            Circle dot = new Circle(p1.getX(), p1.getY(), 5, annotationColor);
-            dot.setStroke(Color.WHITE);
-            mapPane.getChildren().add(dot);
-            break;
+        switch (ann.getType()) {
+            case POINT:
+                Circle dot = new Circle(p1.getX(), p1.getY(), 5, annotationColor);
+                dot.setStroke(Color.WHITE);
+                mapPane.getChildren().add(dot);
+                break;
 
-        case TEXT:
-            break;
+            case TEXT:
+                break;
 
-        case LINE:
-            if (gps.size() >= 2) {
-                Point2D p2 = projection.project(gps.get(1));
-                Line line = new Line(p1.getX(), p1.getY(), p2.getX(), p2.getY());
-                line.setStroke(annotationColor);
-                line.setStrokeWidth(ann.getStrokeWidth());
-                mapPane.getChildren().add(line);
-            }
-            break;
+            case LINE:
+                if (gps.size() >= 2) {
+                    Point2D p2 = projection.project(gps.get(1));
+                    Line line = new Line(p1.getX(), p1.getY(), p2.getX(), p2.getY());
+                    line.setStroke(annotationColor);
+                    line.setStrokeWidth(ann.getStrokeWidth());
+                    mapPane.getChildren().add(line);
+                }
+                break;
 
-        case CIRCLE:
-            if (gps.size() >= 2) {
-                Point2D edge = projection.project(gps.get(1));
-                double pixelRadius = p1.distance(edge);
-                if (pixelRadius > 500) pixelRadius = 50;
-                Circle circle = new Circle(p1.getX(), p1.getY(), pixelRadius);
-                circle.setStroke(annotationColor);
-                circle.setStrokeWidth(ann.getStrokeWidth());
-                circle.setFill(annotationColor.deriveColor(0, 1, 1, 0.3));
-                mapPane.getChildren().add(circle);
-            }
-            break;
+            case CIRCLE:
+                if (gps.size() >= 2) {
+                    Point2D edge = projection.project(gps.get(1));
+                    double pixelRadius = p1.distance(edge);
+                    if (pixelRadius > 500)
+                        pixelRadius = 50;
+                    Circle circle = new Circle(p1.getX(), p1.getY(), pixelRadius);
+                    circle.setStroke(annotationColor);
+                    circle.setStrokeWidth(ann.getStrokeWidth());
+                    circle.setFill(annotationColor.deriveColor(0, 1, 1, 0.3));
+                    mapPane.getChildren().add(circle);
+                }
+                break;
 
-        default:
-            break;
+            default:
+                break;
+        }
+
+        addLabel(p1, ann);
     }
-    
-    addLabel(p1, ann);
-    }
-    
+
     private void addLabel(Point2D pos, Annotation ann) {
-    if (ann.getText() == null || ann.getText().isEmpty()) return;
-    
-    Label label = new Label(ann.getText());
-    label.setTextFill(Color.web(ann.getColor()));
-    label.setStyle("-fx-background-color: rgba(255, 255, 255, 0.9); " +
-                   "-fx-font-weight: bold; " +
-                   "-fx-padding: 4 8 4 8; " +
-                   "-fx-background-radius: 5; " +
-                   "-fx-border-color: " + ann.getColor() + "; " +
-                   "-fx-border-radius: 5; " +
-                   "-fx-border-width: 1;");
-    
-    label.setLayoutX(pos.getX() + 10);
-    label.setLayoutY(pos.getY() - 15);
-    
-    mapPane.getChildren().add(label);
+        if (ann.getText() == null || ann.getText().isEmpty())
+            return;
+
+        Label label = new Label(ann.getText());
+        label.setTextFill(Color.web(ann.getColor()));
+        label.setStyle("-fx-background-color: rgba(255, 255, 255, 0.9); " +
+                "-fx-font-weight: bold; " +
+                "-fx-padding: 4 8 4 8; " +
+                "-fx-background-radius: 5; " +
+                "-fx-border-color: " + ann.getColor() + "; " +
+                "-fx-border-radius: 5; " +
+                "-fx-border-width: 1;");
+
+        label.setLayoutX(pos.getX() + 10);
+        label.setLayoutY(pos.getY() - 15);
+
+        mapPane.getChildren().add(label);
     }
     // end of AI code
 
     private void drawRoute(Activity activity) {
         List<TrackPoint> points = activity.getTrackPoints();
-        if (points == null || points.isEmpty()) return;
+        if (points == null || points.isEmpty())
+            return;
 
         Polyline routeLine = new Polyline();
         routeLine.setStroke(Color.BLUE);
@@ -529,8 +554,7 @@ public class MapController implements Initializable {
                         nameField.getText().trim(),
                         "#3498db", // Nice blue color
                         2.0,
-                        List.of(geoPos)
-                );
+                        List.of(geoPos));
             }
             return null;
         });
@@ -562,14 +586,15 @@ public class MapController implements Initializable {
     }
 
     @FXML
-    private void handleCumulative(ActionEvent event) throws IOException{
+    private void handleCumulative(ActionEvent event) throws IOException {
         Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/CumulativeMonth.fxml"));
         switchSceneMenu(event, root, "Monthly Stats", false);
     }
-    
+
     private void loadElevationChart(Activity activity) {
         List<TrackPoint> points = activity.getTrackPoints();
-        if (points == null || points.isEmpty()) return;
+        if (points == null || points.isEmpty())
+            return;
 
         NumberAxis xAxis = new NumberAxis();
         NumberAxis yAxis = new NumberAxis();
@@ -582,11 +607,12 @@ public class MapController implements Initializable {
         elevationChart.setCreateSymbols(false);
         elevationChart.setPrefWidth(280);
         elevationChart.setAnimated(false);
-        
+
         XYChart.Series<Number, Number> series = new XYChart.Series<>();
         double accDist = 0;
         for (int i = 0; i < points.size(); i++) {
-            if (i > 0) accDist += points.get(i).distanceTo(points.get(i - 1));
+            if (i > 0)
+                accDist += points.get(i).distanceTo(points.get(i - 1));
             series.getData().add(new XYChart.Data<>(accDist / 1000.0, points.get(i).getElevation()));
         }
         elevationChart.getData().add(series);
@@ -612,7 +638,7 @@ public class MapController implements Initializable {
 
         setupChartMouseListener(points);
     }
-    
+
     private void setupChartMouseListener(List<TrackPoint> points) {
         // AI code
         for (XYChart.Data<Number, Number> data : elevationChart.getData().get(0).getData()) {
@@ -644,77 +670,83 @@ public class MapController implements Initializable {
     // AI code
     private void drawRouteColoredBySpeed(Activity activity) {
         List<TrackPoint> points = activity.getTrackPoints();
-        if (points == null || points.size() < 2) return;
-        
+        if (points == null || points.size() < 2)
+            return;
+
         removeSpeedLegend();
-        
+
         for (int i = 0; i < points.size() - 1; i++) {
             TrackPoint current = points.get(i);
             TrackPoint next = points.get(i + 1);
-            
+
             double speedKmph = current.speedTo(next);
             Color segmentColor = getColorForSpeedFixed(speedKmph);
-            
+
             Point2D p1 = projection.project(current);
             Point2D p2 = projection.project(next);
-            
+
             Line segment = new Line(p1.getX(), p1.getY(), p2.getX(), p2.getY());
             segment.setStroke(segmentColor);
             segment.setStrokeWidth(4);
             segment.setStrokeLineCap(StrokeLineCap.ROUND);
-            
+
             mapPane.getChildren().add(segment);
         }
-        
+
         addStartEndMarkers(activity);
         addSpeedLegend();
     }
-    
+
     private Color getColorForSpeedFixed(double speedKmph) {
-        if (speedKmph > 15) return Color.RED;
-        if (speedKmph > 10) return Color.ORANGE;
-        if (speedKmph > 6) return Color.YELLOW;
-        if (speedKmph > 0) return Color.GREEN;
+        if (speedKmph > 15)
+            return Color.RED;
+        if (speedKmph > 10)
+            return Color.ORANGE;
+        if (speedKmph > 6)
+            return Color.YELLOW;
+        if (speedKmph > 0)
+            return Color.GREEN;
         return Color.GRAY;
     }
-    
+
     private void addStartEndMarkers(Activity activity) {
         Point2D startPx = projection.project(activity.getStartPoint());
         Circle startMarker = new Circle(startPx.getX(), startPx.getY(), 7, Color.LIMEGREEN);
         startMarker.setStroke(Color.BLACK);
         startMarker.setStrokeWidth(1.5);
-        
+
         Point2D endPx = projection.project(activity.getEndPoint());
         Circle endMarker = new Circle(endPx.getX(), endPx.getY(), 7, Color.RED);
         endMarker.setStroke(Color.BLACK);
         endMarker.setStrokeWidth(1.5);
-        
+
         mapPane.getChildren().addAll(startMarker, endMarker);
     }
-    
+
     private void addSpeedLegend() {
         VBox legend = new VBox(5);
-        legend.setStyle("-fx-background-color: white; -fx-background-radius: 5; -fx-padding: 10; -fx-border-color: gray; -fx-border-radius: 5;");
+        legend.setStyle(
+                "-fx-background-color: white; -fx-background-radius: 5; -fx-padding: 10; -fx-border-color: gray; -fx-border-radius: 5;");
         legend.setLayoutX(10);
         legend.setLayoutY(10);
         legend.setUserData("speedLegend");
-        
+
         legend.getChildren().add(new Label("🏃 Speed"));
         legend.getChildren().add(createLegendItem(Color.RED, ">15 km/h"));
         legend.getChildren().add(createLegendItem(Color.ORANGE, "10-15 km/h"));
         legend.getChildren().add(createLegendItem(Color.YELLOW, "6-10 km/h"));
         legend.getChildren().add(createLegendItem(Color.GREEN, "0-6 km/h"));
-        
+
         mapPane.getChildren().add(legend);
     }
-    
+
     private void removeSpeedLegend() {
         mapPane.getChildren().removeIf(node -> {
             Object data = node.getUserData();
             return data != null && "speedLegend".equals(data);
         });
     }
-    
+
     private HBox createLegendItem(Color color, String text) {
         Circle circle = new Circle(8, color);
         circle.setStroke(Color.BLACK);
@@ -723,5 +755,5 @@ public class MapController implements Initializable {
         return hbox;
     }
     // end of AI code
-    
+
 }
