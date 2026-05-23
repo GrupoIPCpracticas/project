@@ -39,23 +39,18 @@ public class CumulativeMonthController {
     private void initialize() {
         app = SportActivityApp.getInstance();
 
-        // Rellenar el ComboBox con los nombres de los meses
         List<String> months = new java.util.ArrayList<>();
         for (Month m : Month.values()) {
             months.add(m.getDisplayName(TextStyle.FULL, Locale.ENGLISH));
         }
         monthPicker.setItems(FXCollections.observableArrayList(months));
 
-        // Seleccionar el mes y año actuales por defecto
         LocalDate now = LocalDate.now();
         monthPicker.getSelectionModel().select(now.getMonthValue() - 1);
 
-        // Spinner de año: rango razonable
         yearPicker.setValueFactory(
             new SpinnerValueFactory.IntegerSpinnerValueFactory(2000, now.getYear(), now.getYear())
         );
-
-        // Cuando cambia el mes o el año, recalcular
         monthPicker.getSelectionModel().selectedIndexProperty().addListener((obs, oldV, newV) -> updateTotals());
         yearPicker.valueProperty().addListener((obs, oldV, newV) -> updateTotals());
 
@@ -63,6 +58,7 @@ public class CumulativeMonthController {
     }
 
     private void updateTotals() {
+        //AI code
         int selectedMonth = monthPicker.getSelectionModel().getSelectedIndex() + 1;
         int selectedYear = yearPicker.getValue();
 
@@ -87,6 +83,7 @@ public class CumulativeMonthController {
         total_distance.setText(String.format("%.2f km", totalDistance / 1000.0));
         total_ascent.setText(String.format("%.0f m", totalAscent));
         total_descent.setText(String.format("%.0f m", totalDescent));
+        //end of AI code
     }
 
     private String formatDuration(Duration d) {
