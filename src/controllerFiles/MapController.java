@@ -2,22 +2,18 @@ package controllerFiles;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.classfile.Label;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
-import javax.swing.GroupLayout.Group;
-import javax.swing.text.html.ListView;
 
-import org.w3c.dom.Node;
+import javafx.scene.control.Label;
+import javafx.scene.Group;
+import javafx.scene.control.ListView;
+import javafx.scene.Node;
 
-import application.Poi;
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.Timeline;
+
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -37,11 +33,9 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
-import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 import upv.ipc.sportlib.*;
 import javafx.scene.shape.Polyline;
 import javafx.scene.chart.LineChart;
@@ -84,10 +78,11 @@ public class MapController implements Initializable {
     @FXML
     private ImageView mapView;
 
-    @FXML
     private LineChart<Number, Number> elevationChart;
     private Circle mapMarker;
     private boolean chartVisible = false;
+    @FXML
+    private Button cumulativeButton;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -176,7 +171,6 @@ public class MapController implements Initializable {
         map_scrollpane.setVvalue(scrollV);
     }
 
-    @FXML
     void listClicked(MouseEvent event) {
 
     }
