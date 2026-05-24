@@ -59,23 +59,23 @@
    <top>
       <HBox alignment="CENTER_RIGHT" fillHeight="false" spacing="10.0" BorderPane.alignment="CENTER">
          <children>
-            <MenuBar HBox.hgrow="NEVER">
-               <menus>
-                  <Menu mnemonicParsing="false" text="User">
-                     <items>
-                        <MenuItem mnemonicParsing="false" onAction="#handleProfile" text="Edit Profile" />
-                        <MenuItem mnemonicParsing="false" onAction="#handleSessions" text="Session History" />
-                        <MenuItem mnemonicParsing="false" onAction="#handleLogout" text="Log Out" />
-                     </items>
-                  </Menu>
-                  <Menu mnemonicParsing="false" text="Maps">
-                     <items>
-                        <MenuItem mnemonicParsing="false" onAction="#handleAddMapMenu" text="Add new map" />
-                        <MenuItem mnemonicParsing="false" onAction="#changeMap" text="Change Current Map" />
-                     </items>
-                  </Menu>
-               </menus>
-            </MenuBar>
+             <MenuBar HBox.hgrow="NEVER">
+                 <menus>
+                     <Menu mnemonicParsing="false" onShowing="#onMenuShowing" text="User">
+                         <items>
+                             <MenuItem mnemonicParsing="false" onAction="#handleProfile" text="Edit Profile" />
+                             <MenuItem mnemonicParsing="false" onAction="#handleSessions" text="Session History" />
+                             <MenuItem mnemonicParsing="false" onAction="#handleLogout" text="Log Out" />
+                         </items>
+                     </Menu>
+                     <Menu mnemonicParsing="false" onShowing="#onMenuShowing" text="Maps">
+                         <items>
+                             <MenuItem mnemonicParsing="false" onAction="#handleAddMapMenu" text="Add new map" />
+                             <MenuItem mnemonicParsing="false" onAction="#changeMap" text="Change Current Map" />
+                         </items>
+                     </Menu>
+                 </menus>
+             </MenuBar>
             <Region HBox.hgrow="ALWAYS" />
             <Button fx:id="cumulativeButton" mnemonicParsing="false" onAction="#handleCumulative" text="Show Monthly Statistics" />
             <Button fx:id="statsButton" mnemonicParsing="false" onAction="#handleStats" text="Show Statistics" />

@@ -131,6 +131,7 @@ public class MapController implements Initializable {
 
     @FXML
     private void changeMap(ActionEvent event) throws IOException {
+        closeLegend();
         FileChooser fc = new FileChooser();
         fc.setInitialDirectory(new File("."));
 
@@ -181,6 +182,7 @@ public class MapController implements Initializable {
 
     @FXML
     private void handleStats(ActionEvent event) throws IOException {
+        closeLegend();
         if (this.currentActivity == null) {
             showError("No activity loaded. Please import a GPX file first.");
             return;
@@ -196,6 +198,7 @@ public class MapController implements Initializable {
 
     @FXML
     private void handleLogout(ActionEvent event) throws IOException {
+        closeLegend();
         SportActivityApp app = SportActivityApp.getInstance();
         app.logout();
         Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/Welcome.fxml"));
@@ -217,6 +220,7 @@ public class MapController implements Initializable {
 
     @FXML
     private void handleImportGPX(ActionEvent event) {
+        closeLegend();
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select GPX File");
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("GPX Files", "*.gpx"));
@@ -246,6 +250,7 @@ public class MapController implements Initializable {
 
     @FXML
     private void handleAddMapMenu(ActionEvent event) throws IOException {
+        closeLegend();
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxmlFiles/AddMap.fxml"));
         Parent root = loader.load();
         switchSceneMenu(event, root, "Add New Map", false);
@@ -260,6 +265,7 @@ public class MapController implements Initializable {
     }
 
     private void loadActivityData(Activity activity) {
+        closeLegend();
         currentActivity = activity;
         currentRegion = activity.getSuggestedMap();
         if (currentRegion == null) {
@@ -585,6 +591,7 @@ public class MapController implements Initializable {
 
     @FXML
     private void handleCumulative(ActionEvent event) throws IOException {
+        closeLegend();
         Parent root = FXMLLoader.load(getClass().getResource("/fxmlFiles/CumulativeMonth.fxml"));
         switchSceneMenu(event, root, "Monthly Stats", false);
     }
@@ -672,6 +679,7 @@ public class MapController implements Initializable {
             return;
 
         removeSpeedLegend();
+        closeLegend();
 
         for (int i = 0; i < points.size() - 1; i++) {
             TrackPoint current = points.get(i);
@@ -787,6 +795,18 @@ public class MapController implements Initializable {
         HBox hbox = new HBox(8, circle, label);
         hbox.setAlignment(Pos.CENTER_LEFT);
         return hbox;
+    }
+    
+    private void closeLegend() {
+        if (legendStage != null && legendStage.isShowing()) {
+            legendStage.close();
+            legendStage = null;
+        }
+    }
+    
+    @FXML
+    private void onMenuShowing() {
+        closeLegend();
     }
     // end of AI code
 
