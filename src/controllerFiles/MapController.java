@@ -808,6 +808,30 @@ public class MapController implements Initializable {
     private void onMenuShowing() {
         closeLegend();
     }
+    
+    @FXML
+    private void handleDeleteActivity(ActionEvent event) {
+        Activity selected = map_listview.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showError("Please select an activity to delete.");
+            return;
+        }
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Delete Activity");
+        confirm.setHeaderText("Delete " + selected.getName() + "?");
+        confirm.setContentText("This action cannot be undone.");
+
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            app.removeActivity(selected);
+            refreshActivityList();
+            mapPane.getChildren().clear();
+            buildMap(new File("maps/upv.jpg"));
+            closeLegend();
+            showInformation("Activity deleted successfully.");
+        }
+    }
     // end of AI code
 
 }

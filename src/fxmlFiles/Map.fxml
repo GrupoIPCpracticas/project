@@ -24,20 +24,21 @@
          <children>
             <SplitPane fx:id="splitPane" dividerPositions="0.25" VBox.vgrow="ALWAYS">
                <items>
-                  <VBox spacing="10.0">
-                     <children>
-                        <Label style="-fx-font-weight: bold;" text="My Activities">
-                           <VBox.margin>
-                              <Insets left="5.0" top="5.0" />
-                           </VBox.margin>
-                        </Label>
-                        <ListView fx:id="map_listview" VBox.vgrow="ALWAYS" />
-                        <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleImportGPX" style="-fx-padding: 10 30; -fx-font-weight: bold; -fx-base: #2196F3; -fx-text-fill: white;" text="Import GPX file" />
-                     </children>
-                     <padding>
-                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                     </padding>
-                  </VBox>
+                   <VBox spacing="10.0">
+                       <children>
+                           <Label style="-fx-font-weight: bold;" text="My Activities">
+                               <VBox.margin>
+                                   <Insets left="5.0" top="5.0" />
+                               </VBox.margin>
+                           </Label>
+                           <ListView fx:id="map_listview" VBox.vgrow="ALWAYS" />
+                           <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleImportGPX" style="-fx-padding: 10 30; -fx-font-weight: bold; -fx-base: #2196F3; -fx-text-fill: white;" text="Import GPX file" />
+                           <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleDeleteActivity" style="-fx-padding: 10 30; -fx-font-weight: bold; -fx-base: #d32f2f; -fx-text-fill: white;" text="Delete Activity" />
+                       </children>
+                       <padding>
+                           <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                       </padding>
+                   </VBox>
                   <ScrollPane fx:id="map_scrollpane" hbarPolicy="ALWAYS" onMouseMoved="#showPosition" pannable="true" prefHeight="398.0" prefWidth="358.0" vbarPolicy="ALWAYS">
                      <content>
                         <Pane fx:id="mapPane">
