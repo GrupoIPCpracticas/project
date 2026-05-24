@@ -130,21 +130,6 @@ public class MapController implements Initializable {
     }
 
     @FXML
-    private void changeMap(ActionEvent event) throws IOException {
-        closeLegend();
-        FileChooser fc = new FileChooser();
-        fc.setInitialDirectory(new File("."));
-
-        File imgFile = fc.showOpenDialog(zoom_slider.getScene().getWindow());
-
-        if (imgFile != null) {
-            System.out.println("Mapa seleccionado: " + imgFile.getCanonicalPath());
-            buildMap(imgFile);
-            map_listview.getItems().clear();
-        }
-    }
-
-    @FXML
     private void showPosition(MouseEvent event) {
         mousePosition.setText(
                 "sceneX: " + (int) event.getSceneX() +
