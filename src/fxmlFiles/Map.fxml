@@ -71,7 +71,6 @@
                      <Menu mnemonicParsing="false" onShowing="#onMenuShowing" text="Maps">
                          <items>
                              <MenuItem mnemonicParsing="false" onAction="#handleAddMapMenu" text="Add new map" />
-                             <MenuItem mnemonicParsing="false" onAction="#changeMap" text="Change Current Map" />
                          </items>
                      </Menu>
                  </menus>
