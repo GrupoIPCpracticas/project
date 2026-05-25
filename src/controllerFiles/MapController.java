@@ -7,12 +7,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
-
 import javafx.scene.control.Label;
 import javafx.scene.Group;
 import javafx.scene.control.ListView;
 import javafx.scene.Node;
-
 
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
@@ -21,7 +19,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
-import javafx.geometry.Pos;
 import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
@@ -44,7 +41,6 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.shape.StrokeLineCap;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
 
 public class MapController implements Initializable {
 
@@ -85,8 +81,6 @@ public class MapController implements Initializable {
     private boolean chartVisible = false;
     @FXML
     private Button cumulativeButton;
-    
-    private Stage legendStage;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -120,7 +114,8 @@ public class MapController implements Initializable {
                     setText(null);
                     setGraphic(null);
                 } else {
-                    String date = activity.getStartTime().toLocalDate().toString();
+                    String date = activity.getStartTime() != null ? activity.getStartTime().toLocalDate().toString()
+                            : "Unknown date";
                     setText(activity.getName() + " — " + date);
                     setStyle("-fx-font-size: 14px; -fx-padding: 5px;");
                 }
@@ -638,31 +633,73 @@ public class MapController implements Initializable {
     }
 
     private void setupChartMouseListener(List<TrackPoint> points) {
-        // AI code
-        for (XYChart.Data<Number, Number> data : elevationChart.getData().get(0).getData()) {
-            data.nodeProperty().addListener((obs, oldNode, newNode) -> {
-                if (newNode != null) {
-                    newNode.setOnMouseEntered(e -> {
-                        double km = data.getXValue().doubleValue();
-                        double accDist = 0;
-                        TrackPoint closest = points.get(0);
-                        for (int i = 1; i < points.size(); i++) {
-                            accDist += points.get(i).distanceTo(points.get(i - 1));
-                            if (accDist / 1000.0 >= km) {
-                                closest = points.get(i);
-                                break;
-                            }
-                        }
-                        Point2D p = projection.project(closest);
-                        mapMarker.setCenterX(p.getX());
-                        mapMarker.setCenterY(p.getY());
-                        mapMarker.setVisible(true);
-                    });
-                    newNode.setOnMouseExited(e -> mapMarker.setVisible(false));
-                }
-            });
+        // Pre-calculate distances for the points
+        double[] distances = new double[points.size()];
+        double accDist = 0;
+        distances[0] = 0;
+        for (int i = 1; i < points.size(); i++) {
+            accDist += points.get(i).distanceTo(points.get(i - 1));
+            distances[i] = accDist;
         }
-        // end of AI code
+
+        Tooltip tooltip = new Tooltip();
+
+        elevationChart.setOnMouseMoved(e -> {
+            NumberAxis xAxis = (NumberAxis) elevationChart.getXAxis();
+            double xInChart = xAxis.sceneToLocal(e.getSceneX(), e.getSceneY()).getX();
+            double km = xAxis.getValueForDisplay(xInChart).doubleValue();
+
+            if (km >= 0 && km <= xAxis.getUpperBound()) {
+                int idx = findClosestIndex(distances, km * 1000.0);
+                TrackPoint closest = points.get(idx);
+
+                String info = String.format("Lat: %.5f\nLon: %.5f\nAlt: %.1f m\nDist: %.2f km",
+                        closest.getLatitude(), closest.getLongitude(), closest.getElevation(), km);
+
+                tooltip.setText(info);
+                if (!tooltip.isShowing()) {
+                    tooltip.show(elevationChart, e.getScreenX() + 15, e.getScreenY() + 15);
+                } else {
+                    tooltip.setAnchorX(e.getScreenX() + 15);
+                    tooltip.setAnchorY(e.getScreenY() + 15);
+                }
+
+                Point2D p = projection.project(closest);
+                mapMarker.setCenterX(p.getX());
+                mapMarker.setCenterY(p.getY());
+                mapMarker.setVisible(true);
+            } else {
+                tooltip.hide();
+                mapMarker.setVisible(false);
+            }
+        });
+
+        elevationChart.setOnMouseExited(e -> {
+            tooltip.hide();
+            mapMarker.setVisible(false);
+        });
+    }
+
+    private int findClosestIndex(double[] distances, double targetDist) {
+        int low = 0;
+        int high = distances.length - 1;
+        while (low <= high) {
+            int mid = (low + high) / 2;
+            if (distances[mid] < targetDist) {
+                low = mid + 1;
+            } else if (distances[mid] > targetDist) {
+                high = mid - 1;
+            } else {
+                return mid;
+            }
+        }
+        if (low >= distances.length) {
+            return distances.length - 1;
+        }
+        if (high < 0) {
+            return 0;
+        }
+        return (Math.abs(distances[low] - targetDist) < Math.abs(distances[high] - targetDist)) ? low : high;
     }
 
     // AI code
@@ -722,48 +759,20 @@ public class MapController implements Initializable {
     }
 
     private void addSpeedLegend() {
-        if (legendStage != null && legendStage.isShowing()) {
-            legendStage.close();
-        }
+        VBox legend = new VBox(5);
+        legend.setStyle(
+                "-fx-background-color: white; -fx-background-radius: 5; -fx-padding: 10; -fx-border-color: gray; -fx-border-radius: 5;");
+        legend.setLayoutX(10);
+        legend.setLayoutY(10);
+        legend.setUserData("speedLegend");
 
-        VBox legend = new VBox(4);
-        legend.setStyle("-fx-background-color: white; -fx-background-radius: 5; -fx-padding: 8 10 8 10; "
-                + "-fx-border-color: #cccccc; -fx-border-radius: 5; "
-                + "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 4, 0, 2, 2);");
-
-        Label titleLabel = new Label("🏃 Speed");
-        titleLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 13px;");
-        legend.getChildren().add(titleLabel);
-
+        legend.getChildren().add(new Label("🏃 Speed"));
         legend.getChildren().add(createLegendItem(Color.RED, ">15 km/h"));
         legend.getChildren().add(createLegendItem(Color.ORANGE, "10-15 km/h"));
         legend.getChildren().add(createLegendItem(Color.YELLOW, "6-10 km/h"));
         legend.getChildren().add(createLegendItem(Color.GREEN, "0-6 km/h"));
 
-        legendStage = new Stage();
-        legendStage.initModality(Modality.NONE);
-        legendStage.initOwner(map_scrollpane.getScene().getWindow());
-        legendStage.setAlwaysOnTop(true);
-        legendStage.setResizable(false);
-        legendStage.setTitle("");
-        legendStage.setX(10);
-        legendStage.setY(60);
-
-        Scene legendScene = new Scene(legend);
-        legendScene.setFill(Color.TRANSPARENT);
-        legendStage.setScene(legendScene);
-        legendStage.show();
-
-        map_scrollpane.getScene().getWindow().xProperty().addListener((obs, old, newVal) -> {
-            if (legendStage != null) {
-                legendStage.setX(newVal.doubleValue() + 10);
-            }
-        });
-        map_scrollpane.getScene().getWindow().yProperty().addListener((obs, old, newVal) -> {
-            if (legendStage != null) {
-                legendStage.setY(newVal.doubleValue() + 60);
-            }
-        });
+        mapPane.getChildren().add(legend);
     }
 
     private void removeSpeedLegend() {
@@ -771,21 +780,13 @@ public class MapController implements Initializable {
             Object data = node.getUserData();
             return data != null && "speedLegend".equals(data);
         });
-
-        if (legendStage != null) {
-            legendStage.close();
-            legendStage = null;
-        }
     }
 
     private HBox createLegendItem(Color color, String text) {
-        Circle circle = new Circle(6, color);
+        Circle circle = new Circle(8, color);
         circle.setStroke(Color.BLACK);
-        circle.setStrokeWidth(0.5);
         Label label = new Label(text);
-        label.setStyle("-fx-font-size: 11px;");
-        HBox hbox = new HBox(8, circle, label);
-        hbox.setAlignment(Pos.CENTER_LEFT);
+        HBox hbox = new HBox(10, circle, label);
         return hbox;
     }
     // end of AI code

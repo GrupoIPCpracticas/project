@@ -1,74 +1,67 @@
-﻿/* 
- * "Dark Velocity" Theme for Running la Safor 
- * High-energy, high-contrast dark mode for fitness tracking.
- */
-
-.root {
-    -fx-font-family: 'Segoe UI', sans-serif;
+﻿.root {
+    -fx-font-family: 'SF Pro Display', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
     -fx-font-size: 14px;
-    -fx-background-color: #0A0A0B;
-    -fx-base: #161618;
-    -fx-accent: #CCFF00;
-    -fx-control-inner-background: #161618;
+    -fx-background-color: linear-gradient(to bottom right, #f8f9fa, #e9ecef);
+    -fx-accent: #007AFF;
 }
 
 .label {
-    -fx-text-fill: #E0E0E0;
+    -fx-text-fill: #1d1d1f;
 }
 
+
 .title-label {
-    -fx-font-size: 32px;
+    -fx-font-size: 28px;
     -fx-font-weight: bold;
-    -fx-text-fill: #CCFF00;
+    -fx-text-fill: #1d1d1f;
+    -fx-padding: 0 0 10 0;
 }
 
 .button {
-    -fx-background-color: #222224;
-    -fx-background-radius: 6;
-    -fx-border-color: #333335;
-    -fx-border-radius: 6;
-    -fx-padding: 10 25;
-    -fx-text-fill: #FFFFFF;
-    -fx-font-weight: bold;
+    -fx-background-color: rgba(255, 255, 255, 0.7);
+    -fx-background-radius: 12;
+    -fx-border-color: rgba(255, 255, 255, 0.3);
+    -fx-border-radius: 12;
+    -fx-padding: 10 20;
+    -fx-text-fill: #1d1d1f;
     -fx-cursor: hand;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.05), 10, 0, 0, 4);
 }
 
 .button:hover {
-    -fx-background-color: #2D2D30;
-    -fx-border-color: #CCFF00;
+    -fx-background-color: rgba(255, 255, 255, 0.9);
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.1), 12, 0, 0, 6);
 }
 
-#loginBtn, .button-primary {
-    -fx-background-color: #CCFF00;
-    -fx-text-fill: #000000;
+.button:pressed {
+    -fx-background-color: rgba(230, 230, 230, 0.9);
+}
+
+#loginBtn,
+.button-primary {
+    -fx-background-color: linear-gradient(to bottom, #007AFF, #0051D7);
+    -fx-text-fill: white;
     -fx-border-color: transparent;
+    -fx-font-weight: bold;
 }
 
-#loginBtn:hover, .button-primary:hover {
-    -fx-background-color: #DFFF4F;
-    -fx-effect: dropshadow(three-pass-box, rgba(204, 255, 0, 0.3), 15, 0, 0, 0);
-}
-
-.text-field, .password-field {
-    -fx-background-color: #161618;
-    -fx-background-radius: 4;
-    -fx-border-color: #333335;
-    -fx-border-radius: 4;
-    -fx-padding: 12;
-    -fx-text-fill: #FFFFFF;
-}
-
-.text-field:focused, .password-field:focused {
-    -fx-border-color: #CCFF00;
+.text-field,
+.password-field {
+    -fx-background-color: rgba(255, 255, 255, 0.5);
+    -fx-background-radius: 10;
+    -fx-border-color: rgba(0, 0, 0, 0.1);
+    -fx-border-radius: 10;
+    -fx-padding: 10;
 }
 
 .list-view {
-    -fx-background-color: #161618;
-    -fx-border-color: #333335;
+    -fx-background-color: rgba(255, 255, 255, 0.4);
+    -fx-background-radius: 14;
+    -fx-border-radius: 14;
+    -fx-border-color: rgba(255, 255, 255, 0.3);
 }
 
 .list-cell:filled:selected {
-    -fx-background-color: #CCFF00;
-    -fx-text-fill: #000000;
-    -fx-font-weight: bold;
+    -fx-background-color: #007AFF;
+    -fx-text-fill: white;
 }
