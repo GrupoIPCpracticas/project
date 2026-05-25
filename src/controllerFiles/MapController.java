@@ -223,6 +223,8 @@ public class MapController implements Initializable {
                     this.projection = new MapProjection(currentRegion, img.getWidth(), img.getHeight());
                     drawRouteColoredBySpeed(currentActivity);
                     loadElevationChart(currentActivity);
+                    Point2D startPixel = projection.project(currentActivity.getStartPoint());
+                    centerMapOn(startPixel, img);
                     if (statsButton != null)
                         statsButton.setDisable(false);
                 }
@@ -268,6 +270,9 @@ public class MapController implements Initializable {
             loadElevationChart(activity);
 
         }
+        
+            Point2D startPixel = projection.project(activity.getStartPoint());
+            centerMapOn(startPixel, mapImage);
 
     }
 
@@ -860,4 +865,44 @@ public class MapController implements Initializable {
     }
     // end of AI code
 
+    
+    //AI code
+    private void centerMapOn(Point2D pixelPoint, Image mapImage) {
+    // Necesitamos esperar a que el layout esté listo antes de calcular
+    map_scrollpane.applyCss();
+    map_scrollpane.layout();
+
+    double zoomLevel   = zoom_slider.getValue();
+    double contentW    = mapImage.getWidth()  * zoomLevel;
+    double contentH    = mapImage.getHeight() * zoomLevel;
+    double viewportW   = map_scrollpane.getViewportBounds().getWidth();
+    double viewportH   = map_scrollpane.getViewportBounds().getHeight();
+
+    // Coordenadas del punto en el espacio escalado
+    double scaledX = pixelPoint.getX() * zoomLevel;
+    double scaledY = pixelPoint.getY() * zoomLevel;
+
+    // Rango desplazable real
+    double scrollableW = contentW - viewportW;
+    double scrollableH = contentH - viewportH;
+
+    if (scrollableW <= 0 || scrollableH <= 0) return; // imagen cabe entera, no hace falta
+
+    double hVal = (scaledX - viewportW / 2.0) / scrollableW;
+    double vVal = (scaledY - viewportH / 2.0) / scrollableH;
+
+    // Clamp a [0,1]
+    hVal = Math.max(0, Math.min(1, hVal));
+    vVal = Math.max(0, Math.min(1, vVal));
+
+    final double fH = hVal;
+    final double fV = vVal;
+
+    // Runlater garantiza que el scroll se aplica después del render
+    javafx.application.Platform.runLater(() -> {
+        map_scrollpane.setHvalue(fH);
+        map_scrollpane.setVvalue(fV);
+    });
+}
+    //end of AI code
 }
