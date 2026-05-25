@@ -32,8 +32,16 @@
                                </VBox.margin>
                            </Label>
                            <ListView fx:id="map_listview" VBox.vgrow="ALWAYS" />
-                           <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleImportGPX" style="-fx-padding: 10 30; -fx-font-weight: bold; -fx-base: #2196F3; -fx-text-fill: white;" text="Import GPX file" />
-                           <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleDeleteActivity" style="-fx-padding: 10 30; -fx-font-weight: bold; -fx-base: #d32f2f; -fx-text-fill: white;" text="Delete Activity" />
+                           <Button maxWidth="1.7976931348623157E308"
+        mnemonicParsing="false"
+        onAction="#handleImportGPX"
+        styleClass="button-primary"
+        text="Import GPX file" />
+                          <Button maxWidth="1.7976931348623157E308"
+        mnemonicParsing="false"
+        onAction="#handleDeleteActivity"
+        styleClass="button-danger"
+        text="Delete Activity" />
                        </children>
                        <padding>
                            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />

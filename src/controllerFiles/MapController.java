@@ -86,8 +86,6 @@ public class MapController implements Initializable {
     
     private Stage legendStage;
 
-    private Stage legendStage;
-
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         app = SportActivityApp.getInstance();

@@ -22,7 +22,7 @@
     -fx-background-radius: 12;
     -fx-border-color: rgba(255, 255, 255, 0.3);
     -fx-border-radius: 12;
-    -fx-padding: 10 20;
+    -fx-padding: 10 20 10 20;
     -fx-text-fill: #1d1d1f;
     -fx-cursor: hand;
     -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.05), 10, 0, 0, 4);
@@ -45,6 +45,29 @@
     -fx-font-weight: bold;
 }
 
+.button-primary:hover {
+    -fx-background-color: linear-gradient(to bottom, #339CFF, #0066FF);
+}
+
+.button-primary:pressed {
+    -fx-background-color: linear-gradient(to bottom, #005FCC, #0047A8);
+}
+
+.button-danger {
+    -fx-background-color: linear-gradient(to bottom, #ff4d4d, #d32f2f);
+    -fx-text-fill: white;
+    -fx-border-color: transparent;
+    -fx-font-weight: bold;
+}
+
+.button-danger:hover {
+    -fx-background-color: linear-gradient(to bottom, #ff6666, #e53935);
+}
+
+.button-danger:pressed {
+    -fx-background-color: linear-gradient(to bottom, #c62828, #b71c1c);
+}
+
 .text-field,
 .password-field {
     -fx-background-color: rgba(255, 255, 255, 0.5);
@@ -64,4 +87,11 @@
 .list-cell:filled:selected {
     -fx-background-color: #007AFF;
     -fx-text-fill: white;
+}
+
+.button-danger {
+    -fx-background-color: linear-gradient(to bottom, #ff4d4d, #d32f2f);
+    -fx-text-fill: white;
+    -fx-border-color: transparent;
+    -fx-font-weight: bold;
 }
