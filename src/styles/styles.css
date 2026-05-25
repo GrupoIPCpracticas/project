@@ -95,3 +95,14 @@
     -fx-border-color: transparent;
     -fx-font-weight: bold;
 }
+
+.combo-box, .spinner {
+    -fx-accent: #d1d1d6;
+}
+
+.combo-box {
+    -fx-background-color: rgba(255, 255, 255, 0.7);
+    -fx-background-radius: 10;
+    -fx-border-color: rgba(0, 0, 0, 0.1);
+    -fx-border-radius: 10;
+}
