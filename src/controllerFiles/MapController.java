@@ -19,6 +19,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
+import javafx.geometry.Pos;
 import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
@@ -41,6 +42,7 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.shape.StrokeLineCap;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 
 public class MapController implements Initializable {
 
@@ -81,6 +83,8 @@ public class MapController implements Initializable {
     private boolean chartVisible = false;
     @FXML
     private Button cumulativeButton;
+
+    private Stage legendStage;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -759,20 +763,48 @@ public class MapController implements Initializable {
     }
 
     private void addSpeedLegend() {
-        VBox legend = new VBox(5);
-        legend.setStyle(
-                "-fx-background-color: white; -fx-background-radius: 5; -fx-padding: 10; -fx-border-color: gray; -fx-border-radius: 5;");
-        legend.setLayoutX(10);
-        legend.setLayoutY(10);
-        legend.setUserData("speedLegend");
+        if (legendStage != null && legendStage.isShowing()) {
+            legendStage.close();
+        }
 
-        legend.getChildren().add(new Label("🏃 Speed"));
+        VBox legend = new VBox(4);
+        legend.setStyle("-fx-background-color: white; -fx-background-radius: 5; -fx-padding: 8 10 8 10; "
+                + "-fx-border-color: #cccccc; -fx-border-radius: 5; "
+                + "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 4, 0, 2, 2);");
+
+        Label titleLabel = new Label("🏃 Speed");
+        titleLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 13px;");
+        legend.getChildren().add(titleLabel);
+
         legend.getChildren().add(createLegendItem(Color.RED, ">15 km/h"));
         legend.getChildren().add(createLegendItem(Color.ORANGE, "10-15 km/h"));
         legend.getChildren().add(createLegendItem(Color.YELLOW, "6-10 km/h"));
         legend.getChildren().add(createLegendItem(Color.GREEN, "0-6 km/h"));
 
-        mapPane.getChildren().add(legend);
+        legendStage = new Stage();
+        legendStage.initModality(Modality.NONE);
+        legendStage.initOwner(map_scrollpane.getScene().getWindow());
+        legendStage.setAlwaysOnTop(true);
+        legendStage.setResizable(false);
+        legendStage.setTitle("");
+        legendStage.setX(10);
+        legendStage.setY(60);
+
+        Scene legendScene = new Scene(legend);
+        legendScene.setFill(Color.TRANSPARENT);
+        legendStage.setScene(legendScene);
+        legendStage.show();
+
+        map_scrollpane.getScene().getWindow().xProperty().addListener((obs, old, newVal) -> {
+            if (legendStage != null) {
+                legendStage.setX(newVal.doubleValue() + 10);
+            }
+        });
+        map_scrollpane.getScene().getWindow().yProperty().addListener((obs, old, newVal) -> {
+            if (legendStage != null) {
+                legendStage.setY(newVal.doubleValue() + 60);
+            }
+        });
     }
 
     private void removeSpeedLegend() {
@@ -780,13 +812,21 @@ public class MapController implements Initializable {
             Object data = node.getUserData();
             return data != null && "speedLegend".equals(data);
         });
+
+        if (legendStage != null) {
+            legendStage.close();
+            legendStage = null;
+        }
     }
 
     private HBox createLegendItem(Color color, String text) {
-        Circle circle = new Circle(8, color);
+        Circle circle = new Circle(6, color);
         circle.setStroke(Color.BLACK);
+        circle.setStrokeWidth(0.5);
         Label label = new Label(text);
-        HBox hbox = new HBox(10, circle, label);
+        label.setStyle("-fx-font-size: 11px;");
+        HBox hbox = new HBox(8, circle, label);
+        hbox.setAlignment(Pos.CENTER_LEFT);
         return hbox;
     }
     // end of AI code
