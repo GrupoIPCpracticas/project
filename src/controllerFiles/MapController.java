@@ -7,12 +7,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
-
 import javafx.scene.control.Label;
 import javafx.scene.Group;
 import javafx.scene.control.ListView;
 import javafx.scene.Node;
-
 
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
@@ -88,6 +86,8 @@ public class MapController implements Initializable {
     
     private Stage legendStage;
 
+    private Stage legendStage;
+
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         app = SportActivityApp.getInstance();
@@ -120,7 +120,8 @@ public class MapController implements Initializable {
                     setText(null);
                     setGraphic(null);
                 } else {
-                    String date = activity.getStartTime().toLocalDate().toString();
+                    String date = activity.getStartTime() != null ? activity.getStartTime().toLocalDate().toString()
+                            : "Unknown date";
                     setText(activity.getName() + " — " + date);
                     setStyle("-fx-font-size: 14px; -fx-padding: 5px;");
                 }
@@ -630,31 +631,73 @@ public class MapController implements Initializable {
     }
 
     private void setupChartMouseListener(List<TrackPoint> points) {
-        // AI code
-        for (XYChart.Data<Number, Number> data : elevationChart.getData().get(0).getData()) {
-            data.nodeProperty().addListener((obs, oldNode, newNode) -> {
-                if (newNode != null) {
-                    newNode.setOnMouseEntered(e -> {
-                        double km = data.getXValue().doubleValue();
-                        double accDist = 0;
-                        TrackPoint closest = points.get(0);
-                        for (int i = 1; i < points.size(); i++) {
-                            accDist += points.get(i).distanceTo(points.get(i - 1));
-                            if (accDist / 1000.0 >= km) {
-                                closest = points.get(i);
-                                break;
-                            }
-                        }
-                        Point2D p = projection.project(closest);
-                        mapMarker.setCenterX(p.getX());
-                        mapMarker.setCenterY(p.getY());
-                        mapMarker.setVisible(true);
-                    });
-                    newNode.setOnMouseExited(e -> mapMarker.setVisible(false));
-                }
-            });
+        // Pre-calculate distances for the points
+        double[] distances = new double[points.size()];
+        double accDist = 0;
+        distances[0] = 0;
+        for (int i = 1; i < points.size(); i++) {
+            accDist += points.get(i).distanceTo(points.get(i - 1));
+            distances[i] = accDist;
         }
-        // end of AI code
+
+        Tooltip tooltip = new Tooltip();
+
+        elevationChart.setOnMouseMoved(e -> {
+            NumberAxis xAxis = (NumberAxis) elevationChart.getXAxis();
+            double xInChart = xAxis.sceneToLocal(e.getSceneX(), e.getSceneY()).getX();
+            double km = xAxis.getValueForDisplay(xInChart).doubleValue();
+
+            if (km >= 0 && km <= xAxis.getUpperBound()) {
+                int idx = findClosestIndex(distances, km * 1000.0);
+                TrackPoint closest = points.get(idx);
+
+                String info = String.format("Lat: %.5f\nLon: %.5f\nAlt: %.1f m\nDist: %.2f km",
+                        closest.getLatitude(), closest.getLongitude(), closest.getElevation(), km);
+
+                tooltip.setText(info);
+                if (!tooltip.isShowing()) {
+                    tooltip.show(elevationChart, e.getScreenX() + 15, e.getScreenY() + 15);
+                } else {
+                    tooltip.setAnchorX(e.getScreenX() + 15);
+                    tooltip.setAnchorY(e.getScreenY() + 15);
+                }
+
+                Point2D p = projection.project(closest);
+                mapMarker.setCenterX(p.getX());
+                mapMarker.setCenterY(p.getY());
+                mapMarker.setVisible(true);
+            } else {
+                tooltip.hide();
+                mapMarker.setVisible(false);
+            }
+        });
+
+        elevationChart.setOnMouseExited(e -> {
+            tooltip.hide();
+            mapMarker.setVisible(false);
+        });
+    }
+
+    private int findClosestIndex(double[] distances, double targetDist) {
+        int low = 0;
+        int high = distances.length - 1;
+        while (low <= high) {
+            int mid = (low + high) / 2;
+            if (distances[mid] < targetDist) {
+                low = mid + 1;
+            } else if (distances[mid] > targetDist) {
+                high = mid - 1;
+            } else {
+                return mid;
+            }
+        }
+        if (low >= distances.length) {
+            return distances.length - 1;
+        }
+        if (high < 0) {
+            return 0;
+        }
+        return (Math.abs(distances[low] - targetDist) < Math.abs(distances[high] - targetDist)) ? low : high;
     }
 
     // AI code
